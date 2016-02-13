@@ -8,12 +8,12 @@
 	<packaging>jar</packaging>
 
 	<name>jpaz2</name>
-	<url>https://github.com/ics-upjs/jpaz2</url>
+	<url>https://github.com/ics-upjs/JPAZ2</url>
 	<description>Framework for java beginners.</description>
 
 	<issueManagement>
 		<system>github</system>
-		<url>https://github.com/ics-upjs/jpaz2/issues</url>
+		<url>https://github.com/ics-upjs/JPAZ2/issues</url>
 	</issueManagement>
 
 	<licenses>
@@ -33,16 +33,14 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git@github.com:ics-upjs/jpaz2.git</connection>
-		<developerConnection>scm:git:git@github.com:ics-upjs/jpaz2.git</developerConnection>
-		<url>git@github.com:ics-upjs/jpaz2.git</url>
+		<connection>scm:git:git@github.com:ics-upjs/JPAZ2.git</connection>
+		<developerConnection>scm:git:git@github.com:ics-upjs/JPAZ2.git</developerConnection>
+		<url>git@github.com:ics-upjs/JPAZ2.git</url>
 	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.test.skip>true</maven.test.skip>
-		<maven.test.failure.ignore>true</maven.test.failure.ignore>
-		<maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
