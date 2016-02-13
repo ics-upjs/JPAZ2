@@ -1,7 +1,7 @@
 package sk.upjs.jpaz2;
 
 /**
- *	An event which indicates that a change of the pane occurred.
+ * An event which indicates that a change of the pane occurred.
  */
 class PaneChangeEvent {
 
@@ -11,8 +11,11 @@ class PaneChangeEvent {
 	private Pane source;
 
 	/**
-	 * Creates a new PaneChangeEvent object containing details of the event that occurred.
-	 * @param source the pane that initiated the event
+	 * Creates a new PaneChangeEvent object containing details of the event that
+	 * occurred.
+	 * 
+	 * @param source
+	 *            the pane that initiated the event
 	 */
 	public PaneChangeEvent(Pane source) {
 		this.source = source;
@@ -20,10 +23,11 @@ class PaneChangeEvent {
 
 	/**
 	 * Returns the pane where the change occurred.
+	 * 
 	 * @return a pane where the change occurred
 	 */
 	public Pane getSource() {
 		return source;
 	}
-	
+
 }

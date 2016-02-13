@@ -751,8 +751,7 @@ public class Turtle implements PaneObject {
 				// compute active range
 				Rectangle2D activeRange = range;
 				if ((activeRange == null) && (parentPane != null))
-					activeRange = new Rectangle2D.Double(0, 0,
-							parentPane.getWidth(), parentPane.getHeight());
+					activeRange = new Rectangle2D.Double(0, 0, parentPane.getWidth(), parentPane.getHeight());
 
 				// if x and y are not inside the range, change them to fit the
 				// range
@@ -813,8 +812,7 @@ public class Turtle implements PaneObject {
 	public void center() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (parentPane != null) {
-				setPosition(parentPane.getWidth() / 2.0,
-						parentPane.getHeight() / 2.0);
+				setPosition(parentPane.getWidth() / 2.0, parentPane.getHeight() / 2.0);
 			}
 		}
 	}
@@ -851,8 +849,7 @@ public class Turtle implements PaneObject {
 			Point2D end = new Point2D.Double(this.x, this.y);
 
 			if (penDownState && (parentPane != null)) {
-				parentPane.draw(new Line2D.Double(start, end), new BasicStroke(
-						(float) penWidth), penColor, null);
+				parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penWidth), penColor, null);
 			}
 		}
 	}
@@ -884,8 +881,7 @@ public class Turtle implements PaneObject {
 			RangeStyle realRangeStyle = rangeStyle;
 
 			if ((realRange == null) && (parentPane != null)) {
-				realRange = new Rectangle2D.Double(0, 0, parentPane.getWidth(),
-						parentPane.getHeight());
+				realRange = new Rectangle2D.Double(0, 0, parentPane.getWidth(), parentPane.getHeight());
 			}
 
 			if (realRange == null) {
@@ -893,10 +889,9 @@ public class Turtle implements PaneObject {
 			}
 
 			// case of a simple move
-			if ((realRangeStyle == RangeStyle.WINDOW)
-					|| (realRangeStyle == RangeStyle.FENCE)) {
-				moveTo(x + length * JPAZUtilities.degreeCos(90 - direction), y
-						- length * JPAZUtilities.degreeSin(90 - direction));
+			if ((realRangeStyle == RangeStyle.WINDOW) || (realRangeStyle == RangeStyle.FENCE)) {
+				moveTo(x + length * JPAZUtilities.degreeCos(90 - direction),
+						y - length * JPAZUtilities.degreeSin(90 - direction));
 				return;
 			}
 
@@ -942,8 +937,7 @@ public class Turtle implements PaneObject {
 
 					// if bounce mode, we change the direction
 					if (realRangeStyle == RangeStyle.BOUNCE) {
-						setDirection(stepBack ? 270 - movingDirection
-								: 90 - movingDirection);
+						setDirection(stepBack ? 270 - movingDirection : 90 - movingDirection);
 					}
 
 					break;
@@ -954,12 +948,10 @@ public class Turtle implements PaneObject {
 				double dy = Math.abs(length * yMove);
 
 				if (targetY < realRange.getMinY()) {
-					stepLength = Math.abs(currentY - realRange.getMinY()) / dy
-							* stepLength;
+					stepLength = Math.abs(currentY - realRange.getMinY()) / dy * stepLength;
 					crossingBorder = 1;
 				} else if (targetY > realRange.getMaxY()) {
-					stepLength = Math.abs(currentY - realRange.getMaxY()) / dy
-							* stepLength;
+					stepLength = Math.abs(currentY - realRange.getMaxY()) / dy * stepLength;
 					crossingBorder = 3;
 				}
 				targetX = currentX + stepLength * xMove;
@@ -967,12 +959,10 @@ public class Turtle implements PaneObject {
 
 				double dx = Math.abs(length * xMove);
 				if (targetX < realRange.getMinX()) {
-					stepLength = Math.abs(currentX - realRange.getMinX()) / dx
-							* stepLength;
+					stepLength = Math.abs(currentX - realRange.getMinX()) / dx * stepLength;
 					crossingBorder = 4;
 				} else if (targetX > realRange.getMaxX()) {
-					stepLength = Math.abs(currentX - realRange.getMaxX()) / dx
-							* stepLength;
+					stepLength = Math.abs(currentX - realRange.getMaxX()) / dx * stepLength;
 					crossingBorder = 2;
 				}
 				targetX = currentX + stepLength * xMove;
@@ -982,8 +972,7 @@ public class Turtle implements PaneObject {
 				length -= stepLength;
 
 				// change position in case of the WRAP mode
-				if ((realRangeStyle == RangeStyle.WRAP)
-						&& (crossingBorder != 0)) {
+				if ((realRangeStyle == RangeStyle.WRAP) && (crossingBorder != 0)) {
 					if (crossingBorder == 1) {
 						targetY = realRange.getMaxY();
 					} else if (crossingBorder == 2) {
@@ -998,8 +987,7 @@ public class Turtle implements PaneObject {
 				}
 
 				// change moving direction in case of the BOUNCE mode
-				if ((realRangeStyle == RangeStyle.BOUNCE)
-						&& (crossingBorder != 0)) {
+				if ((realRangeStyle == RangeStyle.BOUNCE) && (crossingBorder != 0)) {
 					if ((crossingBorder == 1) || (crossingBorder == 3)) {
 						movingDirection = -movingDirection;
 					} else if ((crossingBorder == 2) || (crossingBorder == 4)) {
@@ -1025,8 +1013,8 @@ public class Turtle implements PaneObject {
 	 */
 	public double distanceTo(double x, double y) {
 		Point2D position = getPosition();
-		return Math.sqrt(Math.abs((position.getX() - x) * (position.getX() - x)
-				+ (position.getY() - y) * (position.getY() - y)));
+		return Math.sqrt(Math
+				.abs((position.getX() - x) * (position.getX() - x) + (position.getY() - y) * (position.getY() - y)));
 	}
 
 	/**
@@ -1056,9 +1044,8 @@ public class Turtle implements PaneObject {
 
 		double dx = x - position.getX();
 		double dy = y - position.getY();
-		double distance = Math.sqrt(Math.abs((position.getX() - x)
-				* (position.getX() - x) + (position.getY() - y)
-				* (position.getY() - y)));
+		double distance = Math.sqrt(Math
+				.abs((position.getX() - x) * (position.getX() - x) + (position.getY() - y) * (position.getY() - y)));
 
 		if (distance == 0) {
 			return 0;
@@ -1128,8 +1115,7 @@ public class Turtle implements PaneObject {
 	public void print(String message) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (parentPane != null) {
-				parentPane.drawString(new Point2D.Double(x, y), direction,
-						message, font, penColor, false);
+				parentPane.drawString(new Point2D.Double(x, y), direction, message, font, penColor, false);
 			}
 		}
 	}
@@ -1143,8 +1129,7 @@ public class Turtle implements PaneObject {
 	public void printCenter(String message) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (parentPane != null) {
-				parentPane.drawString(new Point2D.Double(x, y), direction,
-						message, font, penColor, true);
+				parentPane.drawString(new Point2D.Double(x, y), direction, message, font, penColor, true);
 			}
 		}
 	}
@@ -1208,11 +1193,9 @@ public class Turtle implements PaneObject {
 				// prepare polygon shape
 				Polygon polygon = new Polygon();
 				for (Point2D point : pointsOfPolygon)
-					polygon.addPoint((int) Math.round(point.getX()),
-							(int) Math.round(point.getY()));
+					polygon.addPoint((int) Math.round(point.getX()), (int) Math.round(point.getY()));
 
-				parentPane.fill(polygon, new BasicStroke((float) penWidth),
-						penColor, fillColor);
+				parentPane.fill(polygon, new BasicStroke((float) penWidth), penColor, fillColor);
 			}
 
 			pointsOfPolygon = null;
@@ -1231,9 +1214,8 @@ public class Turtle implements PaneObject {
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (parentPane != null)
-				parentPane.fill(new Ellipse2D.Double(x - radius, y - radius,
-						2 * radius, 2 * radius), new BasicStroke(
-						(float) penWidth), penColor, fillColor);
+				parentPane.fill(new Ellipse2D.Double(x - radius, y - radius, 2 * radius, 2 * radius),
+						new BasicStroke((float) penWidth), penColor, fillColor);
 		}
 	}
 
@@ -1527,8 +1509,8 @@ public class Turtle implements PaneObject {
 	 * Updates animation timer.
 	 */
 	private void updateAnimationTimer() {
-		boolean activeAnimation = animatedShape && (getFrameCount() > 1)
-				&& (frameDuration > 0) && (visible) && (parentPane != null);
+		boolean activeAnimation = animatedShape && (getFrameCount() > 1) && (frameDuration > 0) && (visible)
+				&& (parentPane != null);
 
 		if (activeAnimation) {
 			// create animation timer, if necessary

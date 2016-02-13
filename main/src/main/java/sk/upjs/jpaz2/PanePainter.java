@@ -8,7 +8,9 @@ import java.awt.*;
 public interface PanePainter {
 	/**
 	 * Paints to the pane graphics.
-	 * @param graphics the graphics
+	 * 
+	 * @param graphics
+	 *            the graphics
 	 */
 	void doPaint(Graphics2D graphics);
 }

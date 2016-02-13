@@ -5,23 +5,23 @@ package sk.upjs.jpaz2;
  */
 interface PaneChangeListener {
 
-    /**
-     * Invoked when a pane is resized.
-     */
-    void paneResized(PaneChangeEvent e);
+	/**
+	 * Invoked when a pane is resized.
+	 */
+	void paneResized(PaneChangeEvent e);
 
-    /**
-     * Invoked when a pane is moved.
-     */
-    void paneMoved(PaneChangeEvent e);
+	/**
+	 * Invoked when a pane is moved.
+	 */
+	void paneMoved(PaneChangeEvent e);
 
-    /**
-     * Invoked when the graphical content of a pane is invalidated.
-     */
-    void paneInvalidated(PaneChangeEvent e);
+	/**
+	 * Invoked when the graphical content of a pane is invalidated.
+	 */
+	void paneInvalidated(PaneChangeEvent e);
 
-    /**
-     * Invoked when a pane rotation is changed.
-     */
-    void paneRotationChanged(PaneChangeEvent e);
+	/**
+	 * Invoked when a pane rotation is changed.
+	 */
+	void paneRotationChanged(PaneChangeEvent e);
 }

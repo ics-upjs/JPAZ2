@@ -14,14 +14,12 @@ public class WinPane extends Pane {
 	/**
 	 * Cursor to be show when the point is clickable.
 	 */
-	private static final Cursor CLICKABLE_CURSOR = new Cursor(
-			Cursor.HAND_CURSOR);
+	private static final Cursor CLICKABLE_CURSOR = new Cursor(Cursor.HAND_CURSOR);
 
 	/**
 	 * Cursor to be shown when the point is not clickable.
 	 */
-	private static final Cursor NOT_CLICKABLE_CURSOR = new Cursor(
-			Cursor.DEFAULT_CURSOR);
+	private static final Cursor NOT_CLICKABLE_CURSOR = new Cursor(Cursor.DEFAULT_CURSOR);
 
 	/**
 	 * Internal class extending the JPanel. The paint method of this class asks
@@ -171,8 +169,7 @@ public class WinPane extends Pane {
 	 * @param visible
 	 *            the visibility of the constructed frame
 	 */
-	private WinPane(int x, int y, int width, int height, final String title,
-			boolean visible) {
+	private WinPane(int x, int y, int width, int height, final String title, boolean visible) {
 		// call constructor of the Pane. Position of the pane inside the frame
 		// is (0, 0).
 		super(0, 0, width, height);
@@ -278,8 +275,7 @@ public class WinPane extends Pane {
 							// size of the pane (this is to recognize, whether
 							// component resize is
 							// caused by resize request or user activity
-							drawPanel.setPreferredSize(new Dimension(
-									getWidth(), getHeight()));
+							drawPanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
 							drawPanel.setSize(drawPanel.getPreferredSize());
 							frame.pack();
 							drawPanel.repaint();
@@ -369,15 +365,13 @@ public class WinPane extends Pane {
 
 			frame.add(drawPanel, BorderLayout.CENTER);
 			frame.pack();
-			frame.setLocation((int) Math.round(getX() - getXCenter()),
-					(int) Math.round(getY() - getYCenter()));
+			frame.setLocation((int) Math.round(getX() - getXCenter()), (int) Math.round(getY() - getYCenter()));
 			frame.setVisible(false);
 			frame.setResizable(frameResizable);
 
 			// set icon
 			try {
-				frame.setIconImage(ImageIO.read(this.getClass().getResource(
-						"/sk/upjs/jpaz2/images/jpazLogo.png")));
+				frame.setIconImage(ImageIO.read(this.getClass().getResource("/sk/upjs/jpaz2/images/jpazLogo.png")));
 			} catch (Exception e) {
 				// nothing to do
 			}
@@ -421,8 +415,7 @@ public class WinPane extends Pane {
 			@Override
 			public void componentMoved(ComponentEvent e) {
 				synchronized (JPAZUtilities.getJPAZLock()) {
-					WinPane.super.setPosition(frame.getX() + getXCenter(),
-							frame.getY() + getYCenter());
+					WinPane.super.setPosition(frame.getX() + getXCenter(), frame.getY() + getYCenter());
 				}
 			}
 		});
@@ -438,12 +431,9 @@ public class WinPane extends Pane {
 					// caused by resize request or user activity
 
 					// if user activity, then resize request
-					if (!drawPanel.getPreferredSize().equals(
-							drawPanel.getSize())) {
-						drawPanel.setPreferredSize(new Dimension(getWidth(),
-								getHeight()));
-						WinPane.super.resize(drawPanel.getWidth(),
-								drawPanel.getHeight());
+					if (!drawPanel.getPreferredSize().equals(drawPanel.getSize())) {
+						drawPanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
+						WinPane.super.resize(drawPanel.getWidth(), drawPanel.getHeight());
 					}
 				}
 			}

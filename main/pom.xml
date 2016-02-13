@@ -4,7 +4,7 @@
 
 	<groupId>sk.upjs</groupId>
 	<artifactId>jpaz2</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>jpaz2</name>

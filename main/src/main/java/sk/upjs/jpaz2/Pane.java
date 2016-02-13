@@ -100,8 +100,7 @@ public class Pane implements PaneObject {
 	 * Composite that reflects current value of transparency. It is used for
 	 * rendering the pane.
 	 */
-	private AlphaComposite drawingComposite = AlphaComposite.getInstance(
-			AlphaComposite.SRC_OVER, 1.0f);
+	private AlphaComposite drawingComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
 
 	/**
 	 * Image that stores content of the pane.
@@ -505,8 +504,7 @@ public class Pane implements PaneObject {
 				int roundedY = (int) Math.round(y);
 
 				// check whether there is a real visual change of position
-				if ((roundedX != roundedLocation.x)
-						|| (roundedY != roundedLocation.y)) {
+				if ((roundedX != roundedLocation.x) || (roundedY != roundedLocation.y)) {
 					roundedLocation.x = roundedX;
 					roundedLocation.y = roundedY;
 
@@ -601,8 +599,7 @@ public class Pane implements PaneObject {
 	public boolean containsPoint(int x, int y) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Point transformedPoint = transformCoordinates(x, y);
-			return (transformedPoint.x >= 0) && (transformedPoint.y >= 0)
-					&& (transformedPoint.x < width)
+			return (transformedPoint.x >= 0) && (transformedPoint.y >= 0) && (transformedPoint.x < width)
 					&& (transformedPoint.y < height);
 		}
 	}
@@ -616,11 +613,9 @@ public class Pane implements PaneObject {
 		if (coordinatesTransform != null) {
 			Point2D point = new Point2D.Double(x, y);
 			point = coordinatesTransform.transform(point, null);
-			return new Point((int) Math.round(point.getX()),
-					(int) Math.round(point.getY()));
+			return new Point((int) Math.round(point.getX()), (int) Math.round(point.getY()));
 		} else {
-			return new Point(x - roundedLocation.x + roundedCenter.x, y
-					- roundedLocation.y + roundedCenter.y);
+			return new Point(x - roundedLocation.x + roundedCenter.x, y - roundedLocation.y + roundedCenter.y);
 		}
 	}
 
@@ -743,8 +738,7 @@ public class Pane implements PaneObject {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (this.transparency != transparency) {
 				this.transparency = transparency;
-				drawingComposite = drawingComposite
-						.derive((float) (1.0 - this.transparency));
+				drawingComposite = drawingComposite.derive((float) (1.0 - this.transparency));
 				invalidate();
 			}
 		}
@@ -901,8 +895,7 @@ public class Pane implements PaneObject {
 				g.translate(-xCenter, -yCenter);
 				g.drawImage(backBuffer, null, 0, 0);
 			} else {
-				g.drawImage(backBuffer, null, roundedLocation.x
-						- roundedCenter.x, roundedLocation.y - roundedCenter.y);
+				g.drawImage(backBuffer, null, roundedLocation.x - roundedCenter.x, roundedLocation.y - roundedCenter.y);
 			}
 		}
 	}
@@ -951,10 +944,8 @@ public class Pane implements PaneObject {
 	 */
 	private void resizePaneImages(int newWidth, int newHeight) {
 		// create new images for storing pane content and backbuffer
-		backBuffer = new BufferedImage(newWidth, newHeight,
-				BufferedImage.TYPE_INT_ARGB_PRE);
-		BufferedImage newContent = new BufferedImage(newWidth, newHeight,
-				BufferedImage.TYPE_INT_ARGB_PRE);
+		backBuffer = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB_PRE);
+		BufferedImage newContent = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB_PRE);
 
 		// draw old content to new content
 		if (content != null) {
@@ -1168,8 +1159,7 @@ public class Pane implements PaneObject {
 				throw new RuntimeException("Object is not living in this pane.");
 
 			if (!children.contains(location))
-				throw new RuntimeException(
-						"Location object is not living in this pane.");
+				throw new RuntimeException("Location object is not living in this pane.");
 
 			children.remove(o);
 			children.add(children.indexOf(location) + 1, o);
@@ -1211,8 +1201,7 @@ public class Pane implements PaneObject {
 				throw new RuntimeException("Object is not living in this pane.");
 
 			if (!children.contains(location))
-				throw new RuntimeException(
-						"Location object is not living in this pane.");
+				throw new RuntimeException("Location object is not living in this pane.");
 
 			children.remove(o);
 			children.add(children.indexOf(location), o);
@@ -1391,8 +1380,7 @@ public class Pane implements PaneObject {
 	 *            a boolean, true if coordinates x and y are in coordinates
 	 *            system of this pane.
 	 */
-	void fireMouseEvent(int x, int y, int type, MouseEvent detail,
-			boolean transformed) {
+	void fireMouseEvent(int x, int y, int type, MouseEvent detail, boolean transformed) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			// transform parent's pane coordinates to local coordinates (if
 			// necessary)
@@ -1442,8 +1430,7 @@ public class Pane implements PaneObject {
 			ArrayList<Pane> copyOfPanes = new ArrayList<Pane>(panes);
 			while (index >= 0) {
 				Pane childPane = copyOfPanes.get(index);
-				boolean eventWanted = childPane.mouseEventWanted(type,
-						buttonIdx);
+				boolean eventWanted = childPane.mouseEventWanted(type, buttonIdx);
 
 				if (fireAllowed && (!eventWanted)) {
 					if (childPane.containsPoint(x, y)) {
@@ -1481,8 +1468,7 @@ public class Pane implements PaneObject {
 						onMouseReleased(x, y, detail);
 					}
 				} catch (Exception e) {
-					System.err.println("Catched an exception in the "
-							+ calledMethodName + " method of "
+					System.err.println("Catched an exception in the " + calledMethodName + " method of "
 							+ this.toString() + ": " + e);
 				}
 			}
@@ -1504,14 +1490,12 @@ public class Pane implements PaneObject {
 	private boolean mouseEventWanted(int type, int buttonIdx) {
 		// if a mouse button is released, and we remember that it was pressed
 		// over this pane, we want to receive the event
-		if ((type == MouseEvent.MOUSE_RELEASED) && (buttonIdx >= 0)
-				&& (holdMouseButtons[buttonIdx]))
+		if ((type == MouseEvent.MOUSE_RELEASED) && (buttonIdx >= 0) && (holdMouseButtons[buttonIdx]))
 			return true;
 
 		// mouse dragged is wanted whenever a mouse button was pressed over this
 		// pane
-		if ((type == MouseEvent.MOUSE_DRAGGED)
-				&& (holdMouseButtons[0] || holdMouseButtons[1] || holdMouseButtons[2]))
+		if ((type == MouseEvent.MOUSE_DRAGGED) && (holdMouseButtons[0] || holdMouseButtons[1] || holdMouseButtons[2]))
 			return true;
 
 		return false;
@@ -1604,25 +1588,22 @@ public class Pane implements PaneObject {
 				try {
 					onKeyPressed(detail);
 				} catch (Exception e) {
-					System.err
-							.println("Catched an exception in the onKeyPressed method of "
-									+ this.toString() + ": " + e);
+					System.err.println(
+							"Catched an exception in the onKeyPressed method of " + this.toString() + ": " + e);
 				}
 			} else if (type == KeyEvent.KEY_RELEASED) {
 				try {
 					onKeyReleased(detail);
 				} catch (Exception e) {
-					System.err
-							.println("Catched an exception in the onKeyReleased method of "
-									+ this.toString() + ": " + e);
+					System.err.println(
+							"Catched an exception in the onKeyReleased method of " + this.toString() + ": " + e);
 				}
 			} else if (type == KeyEvent.KEY_TYPED) {
 				try {
 					onKeyTyped(detail);
 				} catch (Exception e) {
-					System.err
-							.println("Catched an exception in the onKeyPressed method of "
-									+ this.toString() + ": " + e);
+					System.err.println(
+							"Catched an exception in the onKeyPressed method of " + this.toString() + ": " + e);
 				}
 			}
 
@@ -1801,8 +1782,7 @@ public class Pane implements PaneObject {
 			int index = copyOfPanes.size() - 1;
 			while (index >= 0) {
 				Pane childPane = copyOfPanes.get(index);
-				if (childPane.containsPoint(x, y)
-						&& childPane.canClick(x, y, true))
+				if (childPane.containsPoint(x, y) && childPane.canClick(x, y, true))
 					return true;
 
 				index--;
@@ -1833,8 +1813,7 @@ public class Pane implements PaneObject {
 			Graphics2D g2 = content.createGraphics();
 
 			if (antialiased)
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-						RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 			// set stroke, color, and paint
 			g2.setStroke(stroke);
@@ -1867,8 +1846,7 @@ public class Pane implements PaneObject {
 			Graphics2D g2 = content.createGraphics();
 
 			if (antialiased)
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-						RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 			// set stroke, color, and paint
 			g2.setStroke(stroke);
@@ -1904,8 +1882,8 @@ public class Pane implements PaneObject {
 	 *            a boolean, true for centering the text at given position,
 	 *            false otherwise.
 	 */
-	void drawString(Point2D position, double direction, String message,
-			Font font, Color color, boolean centerAtPosition) {
+	void drawString(Point2D position, double direction, String message, Font font, Color color,
+			boolean centerAtPosition) {
 		if (message == null)
 			return;
 
@@ -1913,8 +1891,7 @@ public class Pane implements PaneObject {
 			Graphics2D g2 = content.createGraphics();
 
 			if (antialiased)
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-						RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 			g2.translate(position.getX(), position.getY());
 			g2.rotate(Math.toRadians(270 + direction));
@@ -1930,8 +1907,7 @@ public class Pane implements PaneObject {
 			if (centerAtPosition) {
 				FontMetrics fm = g2.getFontMetrics();
 				Rectangle2D bounds = fm.getStringBounds(message, g2);
-				g2.drawString(message, -(int) (bounds.getWidth() / 2),
-						fm.getHeight() / 2 - fm.getDescent());
+				g2.drawString(message, -(int) (bounds.getWidth() / 2), fm.getHeight() / 2 - fm.getDescent());
 			} else {
 				g2.drawString(message, 0, 0);
 			}
@@ -1970,8 +1946,7 @@ public class Pane implements PaneObject {
 	FontMetrics getFontMetrics(Font font) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Graphics2D g2 = content.createGraphics();
-			FontMetrics result = g2.getFontMetrics((font == null) ? g2
-					.getFont() : font);
+			FontMetrics result = g2.getFontMetrics((font == null) ? g2.getFont() : font);
 			g2.dispose();
 			return result;
 		}

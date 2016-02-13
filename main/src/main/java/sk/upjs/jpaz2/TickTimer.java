@@ -211,8 +211,7 @@ public class TickTimer {
 			try {
 				onTick();
 			} catch (Throwable e) {
-				System.err.println("An exception from the onTick method of "
-						+ name + " catched: " + e);
+				System.err.println("An exception from the onTick method of " + name + " catched: " + e);
 			}
 
 			tickExecutionInProgress = false;
@@ -225,8 +224,7 @@ public class TickTimer {
 	 */
 	private void scheduleNextTick() {
 		if ((tickPeriod > 0) && (!tickExecutionInProgress) && (enabled)) {
-			nextTickFuture = JPAZUtilities.getScheduler().schedule(
-					tickRunnable, tickPeriod, TimeUnit.MILLISECONDS);
+			nextTickFuture = JPAZUtilities.getScheduler().schedule(tickRunnable, tickPeriod, TimeUnit.MILLISECONDS);
 		}
 	}
 

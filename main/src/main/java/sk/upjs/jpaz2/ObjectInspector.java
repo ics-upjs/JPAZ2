@@ -43,8 +43,7 @@ public class ObjectInspector {
 		 */
 		public ObjectItem(Object object, Class<?> stopClass, String alias) {
 			if (object == null)
-				throw new NullPointerException(
-						"The inspected object cannot be null.");
+				throw new NullPointerException("The inspected object cannot be null.");
 
 			if (alias != null) {
 				alias = alias.trim();
@@ -249,12 +248,11 @@ public class ObjectInspector {
 	 * @return true, if the Object Inspector is visible, false otherwise.
 	 */
 	public boolean isVisible() {
-		return (Boolean) JPAZUtilities
-				.invokeAndWait(new JPAZUtilities.Computable() {
-					public Object compute() {
-						return frame.isVisible();
-					}
-				});
+		return (Boolean) JPAZUtilities.invokeAndWait(new JPAZUtilities.Computable() {
+			public Object compute() {
+				return frame.isVisible();
+			}
+		});
 	}
 
 	/**
@@ -281,8 +279,7 @@ public class ObjectInspector {
 
 		// set icon
 		try {
-			frame.setIconImage(ImageIO.read(this.getClass().getResource(
-					"/sk/upjs/jpaz2/images/binocular.png")));
+			frame.setIconImage(ImageIO.read(this.getClass().getResource("/sk/upjs/jpaz2/images/binocular.png")));
 		} catch (Exception e) {
 			// nothing to do
 		}
