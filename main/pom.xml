@@ -7,7 +7,7 @@
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>jpaz2</name>
+	<name>JPAZ2</name>
 	<url>https://github.com/ics-upjs/JPAZ2</url>
 	<description>Framework for java beginners.</description>
 
