@@ -200,8 +200,7 @@ public final class JPAZUtilities {
 	 */
 	public static void setWindowsLook() {
 		try {
-			UIManager
-					.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 		} catch (Exception e) {
 			throw new RuntimeException("Change of look&feel failed.", e);
 		}
@@ -212,8 +211,7 @@ public final class JPAZUtilities {
 	 */
 	public static void setJavaLook() {
 		try {
-			UIManager.setLookAndFeel(UIManager
-					.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) {
 			throw new RuntimeException("Change of look&feel failed.", e);
 		}
@@ -296,7 +294,7 @@ public final class JPAZUtilities {
 	 *         privileges to get the resource.
 	 */
 	public static URL getResourceAsURL(String resourceName) {
-		return JPAZUtilities.class.getClassLoader().getResource(resourceName);
+		return JPAZUtilities.class.getResource(resourceName);
 	}
 
 	/**
@@ -308,8 +306,7 @@ public final class JPAZUtilities {
 	 *         could not be found.
 	 */
 	public static InputStream getResourceAsStream(String resourceName) {
-		return JPAZUtilities.class.getClassLoader().getResourceAsStream(
-				resourceName);
+		return JPAZUtilities.class.getResourceAsStream(resourceName);
 	}
 
 	// ---------------------------------------------------------------------------------------------------
