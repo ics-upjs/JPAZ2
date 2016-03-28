@@ -228,6 +228,18 @@ abstract class KeyEventManager {
 	}
 
 	/**
+	 * Emulates release of all keys that are currently pressed.
+	 */
+	public void releasePressedKeys() {
+		for (Map.Entry<Integer, HoldKeyCodeRecord> entry : holdKeys.entrySet()) {
+			fireKeyEvent(KeyEvent.KEY_RELEASED, new KeyEvent((Component) entry.getValue().source, KeyEvent.KEY_RELEASED,
+					System.currentTimeMillis(), lastModifiers, entry.getKey(), KeyEvent.CHAR_UNDEFINED));
+		}
+
+		holdKeys.clear();
+	}
+
+	/**
 	 * Abstract method called to handle generated key events (overridden by
 	 * Panes)
 	 */

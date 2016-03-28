@@ -18,6 +18,11 @@ public class Pane implements PaneObject {
 	private static final Color TRANSPARENT_COLOR = new Color(0, 0, 0, 0);
 
 	/**
+	 * Ordering of mouse buttons.
+	 */
+	private static final int[] MOUSE_BUTTONS = { MouseEvent.BUTTON1, MouseEvent.BUTTON2, MouseEvent.BUTTON3 };
+
+	/**
 	 * Width of the pane in pixels.
 	 */
 	private int width = 0;
@@ -133,6 +138,21 @@ public class Pane implements PaneObject {
 	 * (pressed).
 	 */
 	private final boolean[] holdMouseButtons = new boolean[3];
+
+	/**
+	 * X-coordinate of the last known position of mouse cursor over the pane.
+	 */
+	private int lastMouseX;
+
+	/**
+	 * Y-coordinate of the last known position of mouse cursor over the pane.
+	 */
+	private int lastMouseY;
+
+	/**
+	 * Last known mouse event.
+	 */
+	private MouseEvent lastMouseEvent;
 
 	/**
 	 * Parent pane which is this pane located on.
@@ -1003,6 +1023,11 @@ public class Pane implements PaneObject {
 					parentPane.remove(this);
 				}
 
+				// if there will be no parent, we execute detach actions.
+				if (newParentPane == null) {
+					detach();
+				}
+
 				// change parent
 				parentPane = newParentPane;
 
@@ -1330,6 +1355,15 @@ public class Pane implements PaneObject {
 		}
 	}
 
+	/**
+	 * Internal method that executes detaching actions. The method causes that
+	 * all events are closed by appropriated finalization events.
+	 */
+	void detach() {
+		clearMouseEvents();
+		keyEventManager.releasePressedKeys();
+	}
+
 	// ---------------------------------------------------------------------------------------------------
 	// Event handling based on overridden methods
 	// ---------------------------------------------------------------------------------------------------
@@ -1390,18 +1424,17 @@ public class Pane implements PaneObject {
 				y = localPoint.y;
 			}
 
+			lastMouseX = x;
+			lastMouseY = y;
+			lastMouseEvent = detail;
+
 			// update array that stores which mouse buttons are hold
 			int buttonIdx = -1;
-			switch (detail.getButton()) {
-			case MouseEvent.BUTTON1:
-				buttonIdx = 0;
-				break;
-			case MouseEvent.BUTTON2:
-				buttonIdx = 1;
-				break;
-			case MouseEvent.BUTTON3:
-				buttonIdx = 2;
-				break;
+			for (int i = 0; i < MOUSE_BUTTONS.length; i++) {
+				if (detail.getButton() == MOUSE_BUTTONS[i]) {
+					buttonIdx = i;
+					break;
+				}
 			}
 
 			if (buttonIdx >= 0) {
@@ -1471,6 +1504,27 @@ public class Pane implements PaneObject {
 					System.err.println("Catched an exception in the " + calledMethodName + " method of "
 							+ this.toString() + ": " + e);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Emulates and fires mouse release events for mouse buttons that are hold.
+	 */
+	private void clearMouseEvents() {
+		int lmx = lastMouseX;
+		int lmy = lastMouseY;
+		MouseEvent lme = lastMouseEvent;
+		if (lme == null) {
+			return;
+		}
+
+		for (int i = 0; i < holdMouseButtons.length; i++) {
+			if (holdMouseButtons[i]) {
+				MouseEvent event = new MouseEvent(lme.getComponent(), MouseEvent.MOUSE_RELEASED,
+						System.currentTimeMillis(), lme.getModifiers(), lme.getX(), lme.getY(), 1, false,
+						MOUSE_BUTTONS[i]);
+				fireMouseEvent(lmx, lmy, MouseEvent.MOUSE_RELEASED, event, true);
 			}
 		}
 	}

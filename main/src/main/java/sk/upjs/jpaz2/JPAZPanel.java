@@ -140,8 +140,9 @@ public class JPAZPanel extends JPanel {
 	 */
 	public void bindTo(Pane pane, boolean align) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if ((this.pane == pane) && (this.alignMode == align))
+			if ((this.pane == pane) && (this.alignMode == align)) {
 				return;
+			}
 
 			if ((this.pane == pane) && (this.alignMode != align)) {
 				setAlignMode(align);
@@ -152,17 +153,21 @@ public class JPAZPanel extends JPanel {
 			stopTransitionEffect();
 
 			// remove listener from previously bound pane
-			if (this.pane != null)
+			if (this.pane != null) {
+				this.pane.detach();
 				this.pane.removePaneChangeListener(paneChangeListener);
+			}
 
 			this.alignMode = align;
 			this.pane = pane;
 
 			// add listener to new bound pane
 			if (this.pane != null) {
+				this.pane.detach();
 				this.pane.addPaneChangeListener(paneChangeListener);
-				if (alignMode)
+				if (alignMode) {
 					realignPane();
+				}
 			}
 
 			repaint();
@@ -197,6 +202,10 @@ public class JPAZPanel extends JPanel {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			stopTransitionEffect();
 			TransitionEffect.Transition newTransition = transitionEffect.createImplementation(this, duration);
+			if (this.getPane() != null) {
+				this.getPane().detach();
+			}
+
 			bindTo(pane, align);
 			transition = newTransition;
 			repaint();
@@ -383,16 +392,19 @@ public class JPAZPanel extends JPanel {
 				}
 
 				fireMouseEventInBoundPane(MouseEvent.MOUSE_CLICKED, e);
+				updateCursor(e);
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
 				fireMouseEventInBoundPane(MouseEvent.MOUSE_PRESSED, e);
+				updateCursor(e);
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				fireMouseEventInBoundPane(MouseEvent.MOUSE_RELEASED, e);
+				updateCursor(e);
 			}
 		});
 
@@ -512,8 +524,9 @@ public class JPAZPanel extends JPanel {
 				}
 			}
 
-			if (pane == null)
+			if (pane == null) {
 				return;
+			}
 
 			Graphics2D g2d = (Graphics2D) g;
 			if (alignMode) {
