@@ -54,6 +54,21 @@ public class JPAZPanel extends JPanel {
 	private TransitionEffect.Transition transition = null;
 
 	/**
+	 * Last known position of mouse cursor.
+	 */
+	private final Point lastMousePosition = new Point(0, 0);
+
+	/**
+	 * Runnable that updates mouse cursor.
+	 */
+	private final Runnable updateCursorRunnable = new Runnable() {
+		@Override
+		public void run() {
+			updateCursor(null);
+		}
+	};
+
+	/**
 	 * Cursor to be show when the point is clickable.
 	 */
 	private static final Cursor CLICKABLE_CURSOR = new Cursor(Cursor.HAND_CURSOR);
@@ -171,6 +186,7 @@ public class JPAZPanel extends JPanel {
 			}
 
 			repaint();
+			SwingUtilities.invokeLater(updateCursorRunnable);
 		}
 	}
 
@@ -235,6 +251,7 @@ public class JPAZPanel extends JPanel {
 		if (transition != null) {
 			transition.stop();
 			transition = null;
+			SwingUtilities.invokeLater(updateCursorRunnable);
 		}
 	}
 
@@ -464,11 +481,16 @@ public class JPAZPanel extends JPanel {
 	 */
 	private void updateCursor(MouseEvent e) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			if (e != null) {
+				lastMousePosition.x = e.getX();
+				lastMousePosition.y = e.getY();
+			}
+
 			if (transition != null)
 				return;
 
 			if (pane != null) {
-				if (pane.canClick(e.getX(), e.getY(), !alignMode))
+				if (pane.canClick(lastMousePosition.x, lastMousePosition.y, !alignMode))
 					setCursor(CLICKABLE_CURSOR);
 				else
 					setCursor(NOT_CLICKABLE_CURSOR);
@@ -521,6 +543,7 @@ public class JPAZPanel extends JPanel {
 					return;
 				} else {
 					transition = null;
+					SwingUtilities.invokeLater(updateCursorRunnable);
 				}
 			}
 

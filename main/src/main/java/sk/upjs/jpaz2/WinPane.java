@@ -519,8 +519,8 @@ public class WinPane extends Pane {
 			if (acceptEvents()) {
 				fireMouseEvent(e.getX(), e.getY(), type, e, true);
 
-				// update cursor after the "on mouse moved" event
-				if (type == MouseEvent.MOUSE_MOVED) {
+				// update cursor after any mouse event with exception of dragging
+				if (type != MouseEvent.MOUSE_DRAGGED) {
 					if (canClick(e.getX(), e.getY(), false))
 						drawPanel.setCursor(CLICKABLE_CURSOR);
 					else
