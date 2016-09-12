@@ -2098,9 +2098,12 @@ public class Pane implements PaneObject {
 	 * @return true, if the picture has been saved, false otherwise.
 	 */
 	public boolean savePicture(String filename) {
-		BufferedImage bufferedImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		repaintBackBuffer();
+
+		BufferedImage bufferedImage = new BufferedImage(backBuffer.getWidth(), backBuffer.getHeight(),
+				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = bufferedImage.createGraphics();
-		paintToPaneGraphics(g2d);
+		g2d.drawImage(backBuffer, null, 0, 0);
 		g2d.dispose();
 
 		File file = new File(filename.trim());
