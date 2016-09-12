@@ -5,8 +5,6 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import javax.swing.*;
-
 /**
  * The class JPAZUtilities contains helper methods for JPAZ framework.
  */
@@ -59,68 +57,6 @@ public final class JPAZUtilities {
 		public Object compute();
 	}
 
-	/**
-	 * A wrapper class for getting a result of a call.
-	 */
-	private static class ComputationResult {
-		/**
-		 * Result of a computation.
-		 */
-		Object value;
-	}
-
-	/**
-	 * Invokes a Runnable in the EDT. It is a modified version of
-	 * SwingUtilities.invokeAndWait. If called from EDT, the Runnable is
-	 * executed immediately.
-	 * 
-	 * @param doRun
-	 *            the Runnable object to run
-	 */
-	static void invokeAndWait(Runnable doRun) {
-		if (doRun == null)
-			return;
-
-		try {
-			if (SwingUtilities.isEventDispatchThread()) {
-				doRun.run();
-			} else {
-				SwingUtilities.invokeAndWait(doRun);
-			}
-		} catch (Throwable e) {
-			throw new RuntimeException("Invocation in Swing EDT failed.", e);
-		}
-	}
-
-	/**
-	 * Invokes a Computable in the EDT. Comparing to Runnable, Computable can
-	 * return a value.
-	 * 
-	 * @param doComputation
-	 *            the Computable object to run
-	 * @return result of the Computable object's compute method
-	 */
-	static Object invokeAndWait(final Computable doComputation) {
-		if (doComputation == null)
-			throw new NullPointerException("doComputation cannot be null.");
-
-		try {
-			if (SwingUtilities.isEventDispatchThread()) {
-				return doComputation.compute();
-			} else {
-				final ComputationResult result = new ComputationResult();
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run() {
-						result.value = doComputation.compute();
-					}
-				});
-				return result.value;
-			}
-		} catch (Throwable e) {
-			throw new RuntimeException("Invocation in Swing EDT failed.", e);
-		}
-	}
-
 	// ---------------------------------------------------------------------------------------------------
 	// Slowdown
 	// ---------------------------------------------------------------------------------------------------
@@ -132,11 +68,7 @@ public final class JPAZUtilities {
 	 *            the time in milliseconds.
 	 */
 	public static void delay(long time) {
-		try {
-			Thread.sleep(time);
-		} catch (Exception e) {
-			// nothing to do (
-		}
+		
 	}
 
 	// ---------------------------------------------------------------------------------------------------
@@ -199,22 +131,14 @@ public final class JPAZUtilities {
 	 * Changes look-and-feel to Windows look
 	 */
 	public static void setWindowsLook() {
-		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-		} catch (Exception e) {
-			throw new RuntimeException("Change of look&feel failed.", e);
-		}
+
 	}
 
 	/**
 	 * Changes look-and-feel to Java look
 	 */
 	public static void setJavaLook() {
-		try {
-			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-		} catch (Exception e) {
-			throw new RuntimeException("Change of look&feel failed.", e);
-		}
+		
 	}
 
 	// ---------------------------------------------------------------------------------------------------

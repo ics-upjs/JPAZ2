@@ -1,46 +1,12 @@
 package sk.upjs.jpaz2;
 
-import java.awt.*;
-import java.awt.event.*;
-
-import javax.imageio.*;
+import java.awt.Graphics2D;
 import javax.swing.*;
 
 /**
  * WinPane represents a pane displayed in a windows.
  */
 public class WinPane extends Pane {
-
-	/**
-	 * Cursor to be show when the point is clickable.
-	 */
-	private static final Cursor CLICKABLE_CURSOR = new Cursor(Cursor.HAND_CURSOR);
-
-	/**
-	 * Cursor to be shown when the point is not clickable.
-	 */
-	private static final Cursor NOT_CLICKABLE_CURSOR = new Cursor(Cursor.DEFAULT_CURSOR);
-
-	/**
-	 * Internal class extending the JPanel. The paint method of this class asks
-	 * the pane to draw its content in the panel.
-	 */
-	@SuppressWarnings("serial")
-	private class DrawPanel extends JPanel {
-		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			paintToPaneGraphics((Graphics2D) g);
-		}
-	}
-
-	/**
-	 * Time in miliseconds specifying how long are processing of events is
-	 * delayed after construction of the WinPane object. The reason for delay is
-	 * that events can occur even before the object extending the WinPane class
-	 * is completely constructed. Locking cannot be used for beginners.
-	 */
-	private static final long EVENT_HANDLING_DELAY = 500;
 
 	// ---------------------------------------------------------------------------------------------------
 	// Instance variables
@@ -71,11 +37,6 @@ public class WinPane extends Pane {
 	 */
 	private boolean frameResizable = true;
 
-	/**
-	 * Time, when construction of the object was completed
-	 */
-	private long creationTime;
-
 	// ---------------------------------------------------------------------------------------------------
 	// Constructors
 	// ---------------------------------------------------------------------------------------------------
@@ -97,8 +58,6 @@ public class WinPane extends Pane {
 	 */
 	public WinPane(int width, int height) {
 		this(0, 0, width, height, JPAZ_DEFAULT_TITLE, false);
-		centerGUIFrame();
-		showFrame();
 	}
 
 	/**
@@ -113,8 +72,6 @@ public class WinPane extends Pane {
 	 */
 	public WinPane(int width, int height, String title) {
 		this(0, 0, width, height, title, false);
-		centerGUIFrame();
-		showFrame();
 	}
 
 	/**
@@ -177,16 +134,6 @@ public class WinPane extends Pane {
 		setBorderWidth(0);
 		// set frame title
 		frameTitle = title;
-
-		// construct GUI visualizing the pane
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				createGUI();
-			}
-		});
-
-		if (visible)
-			showFrame();
 	}
 
 	// ---------------------------------------------------------------------------------------------------
@@ -262,30 +209,6 @@ public class WinPane extends Pane {
 	// ---------------------------------------------------------------------------------------------------
 
 	@Override
-	public void resize(int newWidth, int newHeight) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			super.resize(newWidth, newHeight);
-
-			if (drawPanel != null)
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						synchronized (JPAZUtilities.getJPAZLock()) {
-							// preferred size of draw panel is always set to
-							// last known
-							// size of the pane (this is to recognize, whether
-							// component resize is
-							// caused by resize request or user activity
-							drawPanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
-							drawPanel.setSize(drawPanel.getPreferredSize());
-							frame.pack();
-							drawPanel.repaint();
-						}
-					}
-				});
-		}
-	}
-
-	@Override
 	public void setPosition(double x, double y) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			super.setPosition(x, y);
@@ -338,195 +261,5 @@ public class WinPane extends Pane {
 	@Override
 	public String toString() {
 		return "Win" + super.toString();
-	}
-
-	// ---------------------------------------------------------------------------------------------------
-	// User interface and event handlers
-	// ---------------------------------------------------------------------------------------------------
-
-	/**
-	 * Creates the GUI frame and initializes its content
-	 */
-	private void createGUI() {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			// set time, when creation was started
-			creationTime = System.currentTimeMillis();
-
-			frame = new JFrame(frameTitle);
-
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setLayout(new BorderLayout());
-
-			drawPanel = new DrawPanel();
-			drawPanel.setDoubleBuffered(true);
-			drawPanel.setLocation(0, 0);
-			drawPanel.setSize(getWidth(), getHeight());
-			drawPanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
-
-			frame.add(drawPanel, BorderLayout.CENTER);
-			frame.pack();
-			frame.setLocation((int) Math.round(getX() - getXCenter()), (int) Math.round(getY() - getYCenter()));
-			frame.setVisible(false);
-			frame.setResizable(frameResizable);
-
-			// set icon
-			try {
-				frame.setIconImage(ImageIO.read(this.getClass().getResource("/sk/upjs/jpaz2/images/jpazLogo.png")));
-			} catch (Exception e) {
-				// nothing to do
-			}
-
-			createAndInstallHandlers();
-		}
-	}
-
-	/**
-	 * Centers the GUI frame
-	 */
-	private void centerGUIFrame() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					frame.setLocationRelativeTo(null);
-				}
-			}
-		});
-	}
-
-	/**
-	 * Shows the GUI frame.
-	 */
-	private void showFrame() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					frame.setVisible(true);
-				}
-			}
-		});
-	}
-
-	/**
-	 * Creates and install handlers for user events
-	 */
-	private void createAndInstallHandlers() {
-		// frame moved event
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					WinPane.super.setPosition(frame.getX() + getXCenter(), frame.getY() + getYCenter());
-				}
-			}
-		});
-
-		// resize event
-		drawPanel.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					// preferred size of draw panel is always set to last known
-					// size of the pane (this is to recognize, whether component
-					// resize is
-					// caused by resize request or user activity
-
-					// if user activity, then resize request
-					if (!drawPanel.getPreferredSize().equals(drawPanel.getSize())) {
-						drawPanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
-						WinPane.super.resize(drawPanel.getWidth(), drawPanel.getHeight());
-					}
-				}
-			}
-		});
-
-		// mouse events
-		drawPanel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				fireMouseEventWithTransform(MouseEvent.MOUSE_CLICKED, e);
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				fireMouseEventWithTransform(MouseEvent.MOUSE_PRESSED, e);
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				fireMouseEventWithTransform(MouseEvent.MOUSE_RELEASED, e);
-			}
-		});
-
-		// mouse motion events
-		drawPanel.addMouseMotionListener(new MouseMotionAdapter() {
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				fireMouseEventWithTransform(MouseEvent.MOUSE_MOVED, e);
-			}
-
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				fireMouseEventWithTransform(MouseEvent.MOUSE_DRAGGED, e);
-			}
-		});
-
-		// keyboard event
-		frame.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					if (acceptEvents())
-						fireKeyEvent(KeyEvent.KEY_PRESSED, e);
-				}
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					if (acceptEvents())
-						fireKeyEvent(KeyEvent.KEY_RELEASED, e);
-
-				}
-			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-				synchronized (JPAZUtilities.getJPAZLock()) {
-					if (acceptEvents())
-						fireKeyEvent(KeyEvent.KEY_TYPED, e);
-				}
-			}
-		});
-	}
-
-	/**
-	 * Returns whether processing of user GUI events is allowed.
-	 */
-	private boolean acceptEvents() {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (creationTime == 0)
-				return false;
-
-			return (System.currentTimeMillis() - creationTime > EVENT_HANDLING_DELAY);
-		}
-	}
-
-	/**
-	 * Fires a mouse event.
-	 */
-	private void fireMouseEventWithTransform(int type, MouseEvent e) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (acceptEvents()) {
-				fireMouseEvent(e.getX(), e.getY(), type, e, true);
-
-				// update cursor after any mouse event with exception of dragging
-				if (type != MouseEvent.MOUSE_DRAGGED) {
-					if (canClick(e.getX(), e.getY(), false))
-						drawPanel.setCursor(CLICKABLE_CURSOR);
-					else
-						drawPanel.setCursor(NOT_CLICKABLE_CURSOR);
-				}
-			}
-		}
 	}
 }
