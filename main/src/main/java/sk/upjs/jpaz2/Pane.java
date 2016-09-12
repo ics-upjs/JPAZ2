@@ -4,7 +4,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.*;
+import java.io.File;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 /**
  * The Pane represents a rectangle pane with graphical content and ability to
@@ -2085,5 +2088,32 @@ public class Pane implements PaneObject {
 	@Override
 	public String toString() {
 		return "Pane (" + super.toString() + ")";
+	}
+
+	/**
+	 * Stores picture of the pane to an image file.
+	 * 
+	 * @param filename
+	 *            the name of the output image file.
+	 * @return true, if the picture has been saved, false otherwise.
+	 */
+	public boolean savePicture(String filename) {
+		BufferedImage bufferedImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2d = bufferedImage.createGraphics();
+		paintToPaneGraphics(g2d);
+		g2d.dispose();
+
+		File file = new File(filename.trim());
+		int dotSeparator = filename.lastIndexOf('.');
+		if (dotSeparator < 0) {
+			throw new RuntimeException("Invalid filename (no filename extension).");
+		}
+		String format = filename.substring(dotSeparator + 1).toLowerCase();
+
+		try {
+			return ImageIO.write(bufferedImage, format, file);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }
