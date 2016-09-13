@@ -2098,19 +2098,23 @@ public class Pane implements PaneObject {
 	 * @return true, if the picture has been saved, false otherwise.
 	 */
 	public boolean savePicture(String filename) {
-		repaintBackBuffer();
-		
-		BufferedImage bufferedImage = new BufferedImage(backBuffer.getWidth(), backBuffer.getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics2D g2d = bufferedImage.createGraphics();
-		g2d.drawImage(backBuffer, null, 0, 0);
-		g2d.dispose();
-
 		File file = new File(filename.trim());
 		int dotSeparator = filename.lastIndexOf('.');
 		if (dotSeparator < 0) {
 			throw new RuntimeException("Invalid filename (no filename extension).");
 		}
 		String format = filename.substring(dotSeparator + 1).toLowerCase();
+		
+		BufferedImage bufferedImage;
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			repaintBackBuffer();
+
+			bufferedImage = new BufferedImage(backBuffer.getWidth(), backBuffer.getHeight(),
+					BufferedImage.TYPE_INT_RGB);
+			Graphics2D g2d = bufferedImage.createGraphics();
+			g2d.drawImage(backBuffer, null, 0, 0);
+			g2d.dispose();
+		}
 
 		try {
 			return ImageIO.write(bufferedImage, format, file);
