@@ -8,7 +8,7 @@ import javax.swing.*;
  * The ComboBox editor for boolean values.
  */
 @SuppressWarnings("serial")
-public class OIBooleanCellEditor extends DefaultCellEditor {
+class OIBooleanCellEditor extends DefaultCellEditor {
 
 	/**
 	 * Constructs the editor.

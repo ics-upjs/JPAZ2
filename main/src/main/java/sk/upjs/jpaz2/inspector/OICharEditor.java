@@ -12,7 +12,7 @@ import java.text.*;
  * values.
  */
 @SuppressWarnings("serial")
-public class OICharEditor extends DefaultCellEditor {
+class OICharEditor extends DefaultCellEditor {
 
 	/**
 	 * Character formatter.

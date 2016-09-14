@@ -11,7 +11,7 @@ import javax.swing.table.*;
  * opening a method invocation window.
  */
 @SuppressWarnings("serial")
-public class OIMethodInvokerRenderer extends JButton implements TableCellRenderer {
+class OIMethodInvokerRenderer extends JButton implements TableCellRenderer {
 	/**
 	 * Icon for execute button.
 	 */

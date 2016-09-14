@@ -3,7 +3,7 @@ package sk.upjs.jpaz2.inspector;
 /**
  * An unknown value.
  */
-public class UnknownValue {
+class UnknownValue {
 	@Override
 	public String toString() {
 		return "???";

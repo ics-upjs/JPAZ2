@@ -10,7 +10,7 @@ import javax.swing.table.*;
  * Editor for colors.
  */
 @SuppressWarnings("serial")
-public class OIColorEditor extends AbstractCellEditor implements
+class OIColorEditor extends AbstractCellEditor implements
 		TableCellEditor, ActionListener {
 	
 	Color currentColor;

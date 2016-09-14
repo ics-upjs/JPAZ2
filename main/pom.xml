@@ -46,13 +46,13 @@
 	</properties>
 
 	<dependencies>
-		
+
 		<dependency>
 			<groupId>com.thoughtworks.paranamer</groupId>
 			<artifactId>paranamer</artifactId>
 			<version>2.8</version>
 		</dependency>
-		
+
 	</dependencies>
 
 	<distributionManagement>
@@ -132,7 +132,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				 <version>2.4.3</version>
+				<version>2.4.3</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -150,6 +150,15 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.4</version>
+				<configuration>
+					<excludePackageNames>sk.upjs.jpaz2.inspector</excludePackageNames>
+				</configuration>
 			</plugin>
 
 		</plugins>

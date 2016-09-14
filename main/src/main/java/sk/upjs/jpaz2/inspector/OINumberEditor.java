@@ -12,7 +12,7 @@ import java.text.*;
  * values.
  */
 @SuppressWarnings("serial")
-public class OINumberEditor extends DefaultCellEditor {
+class OINumberEditor extends DefaultCellEditor {
 
 	/**
 	 * Number formatter.

@@ -10,7 +10,7 @@ import javax.swing.table.*;
  * The renderer for OIMethodName. It renders the method name and its signature.
  */
 @SuppressWarnings("serial")
-public class OIMethodNameRenderer extends DefaultTableCellRenderer {
+class OIMethodNameRenderer extends DefaultTableCellRenderer {
 	
 	/**
 	 * Constructs the renderer displaying method names.
