@@ -151,7 +151,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	/**
 	 * Shared instance of Paranamer that reads parameter names from bytecode
 	 */
-	private static Paranamer parameterNameReader = new CachingParanamer();
+	private static Paranamer parameterNameReader = new CachingParanamer(new AdaptiveParanamer());
 
 	// --------------------------------------------------------------------------------------------
 	// Instance variables
