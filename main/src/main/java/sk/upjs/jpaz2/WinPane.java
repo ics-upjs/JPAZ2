@@ -1,7 +1,6 @@
 package sk.upjs.jpaz2;
 
 import java.awt.Graphics2D;
-import javax.swing.*;
 
 /**
  * WinPane represents a pane displayed in a windows.
