@@ -18,16 +18,6 @@ public class WinPane extends Pane {
 	public static final String JPAZ_DEFAULT_TITLE = "JPAZ Pane";
 
 	/**
-	 * Frame created for the purpose of visualizing the pane
-	 */
-	private JFrame frame;
-
-	/**
-	 * Frame component that is used to draw the content of this pane.
-	 */
-	private JPanel drawPanel;
-
-	/**
 	 * Frame title displayed in the frame border.
 	 */
 	private String frameTitle = JPAZ_DEFAULT_TITLE;
@@ -161,15 +151,7 @@ public class WinPane extends Pane {
 	 */
 	public void setTitle(final String title) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			frameTitle = title;
-
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					synchronized (JPAZUtilities.getJPAZLock()) {
-						frame.setTitle(title);
-					}
-				}
-			});
+			frameTitle = title;	
 		}
 	}
 
@@ -193,14 +175,6 @@ public class WinPane extends Pane {
 	public void setResizable(final boolean resizable) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			frameResizable = resizable;
-
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					synchronized (JPAZUtilities.getJPAZLock()) {
-						frame.setResizable(resizable);
-					}
-				}
-			});
 		}
 	}
 
@@ -212,16 +186,6 @@ public class WinPane extends Pane {
 	public void setPosition(double x, double y) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			super.setPosition(x, y);
-
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					synchronized (JPAZUtilities.getJPAZLock()) {
-						int xPosition = (int) Math.round(getX() - getXCenter());
-						int yPosition = (int) Math.round(getY() - getYCenter());
-						frame.setLocation(xPosition, yPosition);
-					}
-				}
-			});
 		}
 	}
 
@@ -252,9 +216,6 @@ public class WinPane extends Pane {
 	public void invalidate() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			super.invalidate();
-
-			if (drawPanel != null)
-				drawPanel.repaint();
 		}
 	}
 
