@@ -1,6 +1,7 @@
 package sk.upjs.jpaz2;
 
 import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
 
 /**
  * WinPane represents a pane displayed in a windows.
@@ -150,7 +151,7 @@ public class WinPane extends Pane {
 	 */
 	public void setTitle(final String title) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			frameTitle = title;	
+			frameTitle = title;
 		}
 	}
 
@@ -221,5 +222,28 @@ public class WinPane extends Pane {
 	@Override
 	public String toString() {
 		return "Win" + super.toString();
+	}
+
+	// ---------------------------------------------------------------------------------------------------
+	// Helper method for supporting evaluation of mouse events
+	// ---------------------------------------------------------------------------------------------------
+
+	/**
+	 * Processes a mouse event. The event is broadcasted to all panes at a given
+	 * position, until a mouse non-transparent pane is reached.
+	 * 
+	 * @param x
+	 *            the x-coordinate of the mouse event with respect to the parent
+	 *            pane
+	 * @param y
+	 *            the y-coordinate of the mouse event with respect to the parent
+	 *            pane
+	 * @param type
+	 *            the type of the event
+	 * @param detail
+	 *            the additional information about the event
+	 */ 
+	public void fireMouseEvent(int x, int y, int type, MouseEvent detail) {
+		fireMouseEvent(x, y, type, detail, true);
 	}
 }
