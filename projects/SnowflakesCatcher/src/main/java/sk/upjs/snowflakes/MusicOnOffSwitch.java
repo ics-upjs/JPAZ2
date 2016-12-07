@@ -3,7 +3,7 @@ package sk.upjs.snowflakes;
 import java.awt.event.MouseEvent;
 
 import sk.upjs.jpaz2.*;
-import sk.upjs.jpaz2.games.Game;
+import sk.upjs.jpaz2.theater.*;
 
 /**
  * On/off switch with icon for controlling the music. This class demonstrates
@@ -17,18 +17,18 @@ public class MusicOnOffSwitch extends Pane {
 	private Turtle icon;
 
 	/**
-	 * The game controlled by the switch.
+	 * The stage controlled by the switch.
 	 */
-	private Game game;
+	private Stage stage;
 
 	/**
 	 * Constructs a new music on/off switch
 	 * 
-	 * @param game
-	 *            the game.
+	 * @param stage
+	 *            the stage.
 	 */
-	public MusicOnOffSwitch(Game game) {
-		this.game = game;
+	public MusicOnOffSwitch(Stage stage) {
+		this.stage = stage;
 		setBorderWidth(0);
 		setTransparentBackground(true);
 
@@ -53,10 +53,11 @@ public class MusicOnOffSwitch extends Pane {
 	 * status of playing the music
 	 */
 	public void updateView() {
-		if (isMusicOn())
+		if (isMusicOn()) {
 			icon.setViewIndex(0);
-		else
+		} else {
 			icon.setViewIndex(1);
+		}
 	}
 
 	/**
@@ -65,7 +66,7 @@ public class MusicOnOffSwitch extends Pane {
 	 * @return true, if the music is on, false otherwise.
 	 */
 	public boolean isMusicOn() {
-		return game.getBackgroundMusic().isPlaying();
+		return stage.getBackgroundMusic().isPlaying();
 	}
 
 	/**
@@ -76,19 +77,16 @@ public class MusicOnOffSwitch extends Pane {
 	 *            stop the background music.
 	 */
 	public void setMusicOn(boolean musicOn) {
-		if (musicOn)
-			game.getBackgroundMusic().playInLoop();
-		else
-			game.getBackgroundMusic().stop();
-
+		stage.setMutedMusic(!musicOn);
 		updateView();
 	}
 
 	@Override
 	protected void onMouseReleased(int x, int y, MouseEvent detail) {
 		// switch music after the left mouse button is released over this pane
-		if (detail.getButton() == MouseEvent.BUTTON1)
+		if (detail.getButton() == MouseEvent.BUTTON1) {
 			setMusicOn(!isMusicOn());
+		}
 	}
 
 	@Override

@@ -19,6 +19,9 @@ public class LostSnowflakesPanel extends Pane {
 	 */
 	private Turtle painter;
 
+	/**
+	 * Constructs the panel.
+	 */
 	public LostSnowflakesPanel() {
 		// set size calling the constructor of superclass with parameters
 		super(40, 235);
@@ -53,8 +56,9 @@ public class LostSnowflakesPanel extends Pane {
 	 */
 	public void changeBy(int number) {
 		snowflakeCount += number;
-		if (snowflakeCount < 0)
+		if (snowflakeCount < 0) {
 			snowflakeCount = 0;
+		}
 
 		repaintPanel();
 	}

@@ -1,11 +1,12 @@
 package sk.upjs.snowflakes;
 
 import sk.upjs.jpaz2.*;
+import sk.upjs.jpaz2.theater.*;
 
 /**
  * A boy catching snowflakes.
  */
-public class Boy extends Turtle {
+public class Boy extends Actor {
 
 	/**
 	 * Indicates that the boy is turned left.
@@ -55,8 +56,9 @@ public class Boy extends Turtle {
 	 */
 	public void stepLeft() {
 		setViewIndex(0);
-		if ((isLeft) && (getX() - 15 >= MIN_X))
+		if ((isLeft) && (getX() - 15 >= MIN_X)) {
 			setX(getX() - 15);
+		}
 		isLeft = true;
 	}
 
@@ -65,8 +67,9 @@ public class Boy extends Turtle {
 	 */
 	public void stepRight() {
 		setViewIndex(1);
-		if ((!isLeft) && (getX() + 15 <= MAX_X))
+		if ((!isLeft) && (getX() + 15 <= MAX_X)) {
 			setX(getX() + 15);
+		}
 		isLeft = false;
 	}
 
@@ -81,10 +84,11 @@ public class Boy extends Turtle {
 		// compute coordinates of the center of boy's tongue
 		double tongueCenterY = getY() + TONGUE_CENTER_DY;
 		double tongueCenterX;
-		if (isLeft)
+		if (isLeft) {
 			tongueCenterX = getX() + TONGUE_CENTER_DX;
-		else
+		} else {
 			tongueCenterX = getX() - TONGUE_CENTER_DX;
+		}
 
 		// compute distance from tongue center to snowflake and check whether it
 		// is less than 20

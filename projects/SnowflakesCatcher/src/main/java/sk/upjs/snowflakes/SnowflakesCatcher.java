@@ -1,9 +1,9 @@
 package sk.upjs.snowflakes;
 
 import sk.upjs.jpaz2.*;
-import sk.upjs.jpaz2.games.*;
+import sk.upjs.jpaz2.theater.*;
 
-public class SnowflakesCatcher extends Game {
+public class SnowflakesCatcher extends Stage {
 
 	public SnowflakesCatcher() {
 		super("Snowflakes Catcher", 715, 600, new ImageShape("images", "lost_snowflake.png"));

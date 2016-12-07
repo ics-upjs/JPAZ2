@@ -3,17 +3,17 @@ package sk.upjs.snowflakes;
 import java.awt.event.MouseEvent;
 
 import sk.upjs.jpaz2.*;
-import sk.upjs.jpaz2.games.Game;
+import sk.upjs.jpaz2.theater.*;
 
 /**
- * A back button displayed on the game screen.
+ * A back button displayed on the game scene.
  */
 public class BackButton extends Pane {
 
 	/**
-	 * The game.
+	 * The stage.
 	 */
-	private Game game;
+	private Stage stage;
 
 	/**
 	 * Constructs a back button.
@@ -21,10 +21,10 @@ public class BackButton extends Pane {
 	 * @param game
 	 *            the game.
 	 */
-	public BackButton(Game game) {
+	public BackButton(Stage stage) {
 		// create pane with proper size
 		super(32, 32);
-		this.game = game;
+		this.stage = stage;
 
 		setBorderWidth(0);
 		setTransparentBackground(true);
@@ -46,7 +46,7 @@ public class BackButton extends Pane {
 	@Override
 	protected void onMouseClicked(int x, int y, MouseEvent detail) {
 		if (detail.getButton() == MouseEvent.BUTTON1) {
-			game.changeScene(IntroScene.NAME);
+			stage.changeScene(IntroScene.NAME, TransitionEffect.FADE_OUT_WHITE_FADE_IN, 1500);
 		}
 	}
 }

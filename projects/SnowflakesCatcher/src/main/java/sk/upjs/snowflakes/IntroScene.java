@@ -3,8 +3,7 @@ package sk.upjs.snowflakes;
 import java.awt.event.MouseEvent;
 
 import sk.upjs.jpaz2.*;
-import sk.upjs.jpaz2.games.Game;
-import sk.upjs.jpaz2.games.Scene;
+import sk.upjs.jpaz2.theater.*;
 
 /**
  * Scene (pane) with intro to game that includes a simple menu.
@@ -32,10 +31,10 @@ public class IntroScene extends Scene {
 	private MusicOnOffSwitch musicOnOff;
 
 	/**
-	 * Constructs intro screen with menu.
+	 * Constructs the intro scene with menu.
 	 */
-	public IntroScene(Game game) {
-		super(game);
+	public IntroScene(Stage stage) {
+		super(stage);
 
 		// construct all objects in this pane
 		prepareScreen();
@@ -72,7 +71,7 @@ public class IntroScene extends Scene {
 		add(snowflakeExit);
 
 		// create and add the music on/off switch
-		musicOnOff = new MusicOnOffSwitch(getGame());
+		musicOnOff = new MusicOnOffSwitch(getStage());
 		musicOnOff.setPosition(5, 5);
 		add(musicOnOff);
 	}
@@ -116,7 +115,7 @@ public class IntroScene extends Scene {
 		// the Pane class
 		if (detail.getButton() == MouseEvent.BUTTON1) {
 			if (isOverSTART(x, y)) {
-				getGame().changeScene(GameScene.NAME);
+				getStage().changeScene(GameScene.NAME, TransitionEffect.FADE_OUT_WHITE_FADE_IN, 1500);
 				return;
 			}
 

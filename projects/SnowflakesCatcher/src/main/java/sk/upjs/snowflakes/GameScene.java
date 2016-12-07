@@ -4,7 +4,7 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 
 import sk.upjs.jpaz2.*;
-import sk.upjs.jpaz2.games.*;
+import sk.upjs.jpaz2.theater.*;
 
 public class GameScene extends Scene {
 
@@ -116,10 +116,10 @@ public class GameScene extends Scene {
 	private AudioClip penaltyDecreaseClip;
 
 	/**
-	 * Constructs a new main screen (scene) of the game.
+	 * Constructs a new main scene of the game.
 	 */
-	public GameScene(Game game) {
-		super(game);
+	public GameScene(Stage stage) {
+		super(stage);
 
 		// construct all objects in this pane
 		prepareScreen();
@@ -141,13 +141,13 @@ public class GameScene extends Scene {
 		remove(painter);
 
 		// create and add the music on/off switch
-		musicOnOff = new MusicOnOffSwitch(getGame());
+		musicOnOff = new MusicOnOffSwitch(getStage());
 		musicOnOff.updateView();
 		musicOnOff.setPosition(5, 5);
 		add(musicOnOff);
 
 		// create and place back button
-		backButton = new BackButton(getGame());
+		backButton = new BackButton(getStage());
 		backButton.setPosition(9, 55);
 		add(backButton);
 
@@ -172,7 +172,7 @@ public class GameScene extends Scene {
 		add(lostSnowflakesPanel);
 
 		// create game-over notification
-		gameoverNotification = new GameOverNotification(getGame());
+		gameoverNotification = new GameOverNotification(getStage());
 		gameoverNotification.setPosition(0, 100);
 
 		// load audio

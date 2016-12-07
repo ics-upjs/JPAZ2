@@ -1,12 +1,12 @@
 package sk.upjs.snowflakes;
 
-import sk.upjs.jpaz2.*;
+import sk.upjs.jpaz2.theater.*;
 
 /**
  * A class representing a falling snowflake. It stores the speed of the falling
  * snowflake.
  */
-public class Snowflake extends Turtle {
+public class Snowflake extends Actor {
 
 	/**
 	 * Speed of the falling snowflake.
