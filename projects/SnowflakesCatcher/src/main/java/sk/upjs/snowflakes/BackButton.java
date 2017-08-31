@@ -46,7 +46,7 @@ public class BackButton extends Pane {
 	@Override
 	protected void onMouseClicked(int x, int y, MouseEvent detail) {
 		if (detail.getButton() == MouseEvent.BUTTON1) {
-			stage.changeScene(IntroScene.NAME, TransitionEffect.FADE_OUT_WHITE_FADE_IN, 1500);
+			stage.changeScene(IntroScene.NAME, TransitionEffect.MOVE_DOWN, 1500);
 		}
 	}
 }

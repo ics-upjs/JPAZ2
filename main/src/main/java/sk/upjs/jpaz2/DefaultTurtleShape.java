@@ -8,7 +8,11 @@ import java.awt.geom.*;
  * determined by the current turtle's pen color.
  */
 public class DefaultTurtleShape implements TurtleShape {
-	private static final double angleTg = 0.4142135623730950488016887242097;
+
+	/**
+	 * Tangents of the inner angle of the triangle.
+	 */
+	private static final double ANGLE_TG = 0.4142135623730950488016887242097;
 
 	/**
 	 * Size of the triangle forming the turtle shape
@@ -37,13 +41,14 @@ public class DefaultTurtleShape implements TurtleShape {
 	public DefaultTurtleShape(int size) {
 		this.size = size;
 
-		int offset = (int) Math.round(size / (3 * angleTg));
+		int offset = (int) Math.round(size / (3 * ANGLE_TG));
 		shapePolygon = new Polygon();
 		shapePolygon.addPoint(-size, offset);
 		shapePolygon.addPoint(size, offset);
 		shapePolygon.addPoint(0, -2 * offset);
 	}
 
+	@Override
 	public void paintTurtle(Turtle t, Graphics2D g) {
 		if ((t == null) || (g == null))
 			return;
@@ -82,14 +87,17 @@ public class DefaultTurtleShape implements TurtleShape {
 		}
 	}
 
+	@Override
 	public int getViewCount() {
 		return 1;
 	}
 
+	@Override
 	public int getFrameCount() {
 		return 1;
 	}
 
+	@Override
 	public boolean isPointOfShape(Turtle t, double x, double y) {
 		if (t == null)
 			return false;
@@ -114,7 +122,8 @@ public class DefaultTurtleShape implements TurtleShape {
 			return shapePolygon.contains(translatedPoint);
 		}
 	}
-
+	
+	@Override
 	public long getFrameDuration() {
 		return 0;
 	}

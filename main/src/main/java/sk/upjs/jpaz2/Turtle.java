@@ -3,6 +3,9 @@ package sk.upjs.jpaz2;
 import java.awt.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
+import java.util.List;
+
+import sk.upjs.jpaz2.animators.*;
 
 /**
  * Represents a turtle living on a pane. The turtle provides basic functionality
@@ -25,6 +28,291 @@ public class Turtle implements PaneObject {
 	 * unique turtle names)
 	 */
 	private static int turtleCounter = 0;
+
+	// ---------------------------------------------------------------------------------------------------
+	// Internal movement/turning animations
+	// ---------------------------------------------------------------------------------------------------
+
+	/**
+	 * Painter of lines (used during animations).
+	 */
+	private static class LinePainter implements PanePainter {
+		/**
+		 * Starting point of line.
+		 */
+		private final Point2D start;
+
+		/**
+		 * End point of line.
+		 */
+		private final Point2D end;
+
+		/**
+		 * Pen used to draw the line.
+		 */
+		private final PenState penState;
+
+		/**
+		 * Constructs the line painter.
+		 */
+		private LinePainter(Point2D start, Point2D end, PenState penState) {
+			this.start = start;
+			this.end = end;
+			this.penState = penState;
+		}
+
+		@Override
+		public void paint(Graphics2D graphics) {
+			graphics.setStroke(new BasicStroke((float) penState.width));
+			graphics.setColor(penState.color);
+			graphics.setPaint(null);
+			graphics.draw(new Line2D.Double(start, end));
+		}
+	}
+
+	/**
+	 * The move-to animator.
+	 */
+	private class MoveToMethodAnimator implements WeightedAnimator {
+
+		/**
+		 * The start point of the movement.
+		 */
+		private final Point2D start;
+
+		/**
+		 * The end point of the movement.
+		 */
+		private final Point2D end;
+
+		/**
+		 * Difference of the X-coordinates.
+		 */
+		private final double dx;
+
+		/**
+		 * Difference of the Y-coordinates.
+		 */
+		private final double dy;
+
+		/**
+		 * State of the drawing pen.
+		 */
+		private final PenState penState;
+
+		/**
+		 * The drawing pane.
+		 */
+		private final Pane pane;
+
+		/**
+		 * Constructs the move-to animator.
+		 * 
+		 * @param start
+		 *            the start point.
+		 * @param end
+		 *            the end point.
+		 * @param penState
+		 *            the immutable state of the drawing pen.
+		 */
+		public MoveToMethodAnimator(Point2D start, Point2D end, PenState penState) {
+			this.start = start;
+			this.end = end;
+			this.dx = end.getX() - start.getX();
+			this.dy = end.getY() - start.getY();
+			this.penState = penState;
+			this.pane = parentPane;
+		}
+
+		@Override
+		public void animate(double fraction) {
+			Point2D location = getLocation(fraction);
+			internalSetPosition(location.getX(), location.getY(), true);
+
+			if (penState.down) {
+				pane.setOverlay(Turtle.this, new LinePainter(start, location, penState));
+			}
+		}
+
+		@Override
+		public long getWeight() {
+			return Math.round(Math.sqrt(dx * dx + dy * dy));
+		}
+
+		/**
+		 * Returns overlay painter that is draws result of the animator.
+		 * 
+		 * @return the overlay painter.
+		 */
+		public PanePainter getOverlay(double fraction) {
+			if (penState.down) {
+				return new LinePainter(start, getLocation(fraction), penState);
+			} else {
+				return null;
+			}
+		}
+
+		/**
+		 * Returns location that corresponds to given animation fraction.
+		 * 
+		 * @param fraction
+		 *            the animation fraction.
+		 * @return the location point.
+		 */
+		private Point2D getLocation(double fraction) {
+			if (fraction <= 0) {
+				return new Point2D.Double(start.getX(), start.getY());
+			}
+
+			if (fraction >= 1.0) {
+				return new Point2D.Double(end.getX(), end.getY());
+			}
+
+			double currentX = start.getX() + fraction * dx;
+			double currentY = start.getY() + fraction * dy;
+			return new Point2D.Double(currentX, currentY);
+		}
+	}
+
+	/**
+	 * Composite step animator.
+	 */
+	private class StepMethodAnimator extends SequenceAnimator {
+
+		/**
+		 * Drawing pane where animation overlay is drawn.
+		 */
+		private final Pane drawingPane;
+
+		/**
+		 * Constructs the step animator.
+		 */
+		public StepMethodAnimator(Pane drawingPane, List<WeightedAnimator> animators) {
+			super(animators);
+			this.drawingPane = drawingPane;
+		}
+
+		@Override
+		public void animate(double fraction) {
+			AnimatorFraction animatorFraction = getAnimatorForFraction(fraction);
+
+			for (int i = 0; i < animatorFraction.sequenceNumber; i++) {
+				getAnimator(i).animate(1.0);
+			}
+			animatorFraction.animator.animate(animatorFraction.fraction);
+
+			if (drawingPane != null) {
+				PanePainter overlayPainter = getOverlay(animatorFraction);
+				drawingPane.setOverlay(Turtle.this, overlayPainter);
+			}
+		}
+
+		/**
+		 * Creates animation overlay for given animation fraction.
+		 * 
+		 * @param fraction
+		 *            the fraction of animation.
+		 * @return the overlay painter or null, if there is no overlay.
+		 */
+		private CompositePanePainter getOverlay(double fraction) {
+			return getOverlay(getAnimatorForFraction(fraction));
+		}
+
+		/**
+		 * Creates animation overlay for given animation fraction.
+		 * 
+		 * @param animatorFraction
+		 *            the animation fraction.
+		 * @return the overlay painter or null, if there is no overlay.
+		 */
+		private CompositePanePainter getOverlay(AnimatorFraction animatorFraction) {
+			ArrayList<PanePainter> painters = new ArrayList<>();
+			for (int i = 0; i < animatorFraction.sequenceNumber; i++) {
+				Animator animator = getAnimator(i);
+				if (animator instanceof MoveToMethodAnimator) {
+					PanePainter overlay = ((MoveToMethodAnimator) animator).getOverlay(1.0);
+					if (overlay != null) {
+						painters.add(overlay);
+					}
+				}
+			}
+
+			if (animatorFraction.animator instanceof MoveToMethodAnimator) {
+				PanePainter overlay = ((MoveToMethodAnimator) animatorFraction.animator)
+						.getOverlay(animatorFraction.fraction);
+				if (overlay != null) {
+					painters.add(overlay);
+				}
+			}
+
+			if (painters.isEmpty()) {
+				return null;
+			} else {
+				return new CompositePanePainter(painters);
+			}
+		}
+	}
+
+	/**
+	 * Turn animator.
+	 */
+	private class TurnMethodAnimator extends TurnAnimator {
+
+		/**
+		 * Constructs turn animator.
+		 * 
+		 * @param startDirection
+		 *            the initial direction in degrees when animation starts
+		 * @param endDirection
+		 *            the final direction in degrees after animation
+		 * @param clockwise
+		 *            the direction of rotation (turning).
+		 */
+		public TurnMethodAnimator(double startDirection, double endDirection, boolean clockwise) {
+			super(startDirection, endDirection, clockwise);
+		}
+
+		@Override
+		public void animate(double fraction) {
+			internalSetDirection(computeDirection(fraction), true);
+		}
+	}
+
+	// ---------------------------------------------------------------------------------------------------
+	// Internal holder of pen state
+	// ---------------------------------------------------------------------------------------------------
+
+	/**
+	 * Immutable pen state.
+	 */
+	private static class PenState {
+		/**
+		 * Pen width.
+		 */
+		final double width;
+
+		/**
+		 * Pen color.
+		 */
+		final Color color;
+
+		/**
+		 * True, if the pen is down, false otherwise.
+		 */
+		final boolean down;
+
+		/**
+		 * Constructs the pen state.
+		 * 
+		 * @param turtle
+		 *            the turtle whose state is stored.
+		 */
+		PenState(Turtle turtle) {
+			this.width = turtle.penWidth;
+			this.color = turtle.penColor;
+			this.down = turtle.penDownState;
+		}
+	}
 
 	// ---------------------------------------------------------------------------------------------------
 	// Turtle state fields
@@ -150,6 +438,18 @@ public class Turtle implements PaneObject {
 	 */
 	private TickTimer shapeAnimationTimer = null;
 
+	/**
+	 * Multiplication factor for change animations. The factor determines
+	 * duration of animated change of the state. If the factor is 0, animations
+	 * are disabled.
+	 */
+	private double changeAnimationFactor = 0;
+
+	/**
+	 * Currently active change animation.
+	 */
+	private Animation changeAnimation;
+
 	// ---------------------------------------------------------------------------------------------------
 	// Constructors
 	// ---------------------------------------------------------------------------------------------------
@@ -264,13 +564,24 @@ public class Turtle implements PaneObject {
 	 *            the desired direction of the turtle in degrees.
 	 */
 	public void setDirection(double direction) {
-		// normalize direction
-		direction %= 360.0;
-		if (direction < 0) {
-			direction += 360.0;
-		}
+		internalSetDirection(direction, false);
+	}
 
+	/**
+	 * Internal implementation of the method {@link #setDirection(double)}.
+	 * 
+	 * @param direction
+	 *            the desired direction of the turtle in degrees.
+	 * @param inAnimation
+	 *            true, if the method is executed as a part of animation.
+	 */
+	private void internalSetDirection(double direction, boolean inAnimation) {
+		direction = JPAZUtilities.normalizeAngleInDegrees(direction);
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			if (!inAnimation) {
+				assertNoAnimation();
+			}
+
 			if (this.direction != direction) {
 				this.direction = direction;
 
@@ -338,15 +649,17 @@ public class Turtle implements PaneObject {
 	 *             if the desired pen color is null.
 	 */
 	public void setPenColor(Color penColor) {
-		if (penColor == null)
+		if (penColor == null) {
 			throw new NullPointerException("Pen color cannot be null.");
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (!penColor.equals(this.penColor)) {
 				this.penColor = penColor;
 
-				if (visible)
+				if (visible) {
 					invalidateParent();
+				}
 			}
 		}
 	}
@@ -426,8 +739,9 @@ public class Turtle implements PaneObject {
 	 *            turtle shape is used.
 	 */
 	public void setShape(TurtleShape shape) {
-		if (shape == null)
+		if (shape == null) {
 			shape = DEFAULT_TURTLE_SHAPE;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if ((this.shape == null) || (!this.shape.equals(shape))) {
@@ -623,6 +937,8 @@ public class Turtle implements PaneObject {
 		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+
 			if (!this.rangeStyle.equals(rangeStyle)) {
 				this.rangeStyle = rangeStyle;
 				setPosition(x, y);
@@ -666,6 +982,8 @@ public class Turtle implements PaneObject {
 		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+
 			boolean isChange;
 			if (range == null) {
 				isChange = (this.range != null);
@@ -716,6 +1034,33 @@ public class Turtle implements PaneObject {
 		}
 	}
 
+	/**
+	 * Sets the movement animation factor that determines speed of movement
+	 * animations.
+	 * 
+	 * @param movementAnimationFactor
+	 *            the movement animation factor or 0 if movement animations
+	 *            should be disabled.
+	 */
+	public void setMovementAnimationFactor(double movementAnimationFactor) {
+		movementAnimationFactor = Math.max(movementAnimationFactor, 0);
+
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			this.changeAnimationFactor = movementAnimationFactor;
+		}
+	}
+
+	/**
+	 * Returns the movement animation factor.
+	 * 
+	 * @return the movement animation factor.
+	 */
+	public double getMovementAnimationFactor() {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			return this.changeAnimationFactor;
+		}
+	}
+
 	// ---------------------------------------------------------------------------------------------------
 	// Moving actions and ranges
 	// ---------------------------------------------------------------------------------------------------
@@ -727,58 +1072,51 @@ public class Turtle implements PaneObject {
 	 *            angle in degrees.
 	 */
 	public void turn(double angle) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			setDirection(direction + angle);
+		Animation animation = internalTurn(angle);
+		if (animation != null) {
+			animation.startAndWait();
 		}
 	}
 
 	/**
-	 * Sets the position of the turtle. If the range style is not WINDOW and the
-	 * new coordinates are out of range, the new coordinate are the closest
-	 * location inside the range.
+	 * Internal method for turning the turtle in a clockwise direction.
 	 * 
-	 * @param x
-	 *            the X-coordinate of the desired turtle position.
-	 * @param y
-	 *            the Y-coordinate of the desired turtle position.
+	 * @param angle
+	 *            angle in degrees.
+	 * 
+	 * @return the animation of turn to be played.
 	 */
-	public void setPosition(double x, double y) {
+	private Animation internalTurn(double angle) {
+		if (angle == 0) {
+			return null;
+		}
+
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
 
-			// update positions to fit active range (only if the range style
-			// differs from WINDOW)
-			if (rangeStyle != RangeStyle.WINDOW) {
-				// compute active range
-				Rectangle2D activeRange = range;
-				if ((activeRange == null) && (parentPane != null))
-					activeRange = new Rectangle2D.Double(0, 0, parentPane.getWidth(), parentPane.getHeight());
+			// handle turn without animations
+			if ((changeAnimationFactor <= 0) || (parentPane == null)) {
+				setDirection(direction + angle);
+				return null;
+			}
 
-				// if x and y are not inside the range, change them to fit the
-				// range
-				if (activeRange != null) {
-					if (!activeRange.contains(x, y)) {
-						x = Math.max(x, activeRange.getMinX());
-						x = Math.min(x, activeRange.getMaxX());
-						y = Math.max(y, activeRange.getMinY());
-						y = Math.min(y, activeRange.getMaxY());
+			// turn with animations
+			final double endDirection = direction + angle;
+			TurnMethodAnimator animator = new TurnMethodAnimator(direction, endDirection, angle >= 0);
+			Animation animation = new Animation(Math.round(animator.getAngleChange() * changeAnimationFactor),
+					animator);
+			animation.setFinalizer(new Runnable() {
+				@Override
+				public void run() {
+					synchronized (JPAZUtilities.getJPAZLock()) {
+						changeAnimation = null;
+						internalSetDirection(endDirection, false);
 					}
 				}
-			}
+			});
 
-			if ((this.x != x) || (this.y != y)) {
-				this.x = x;
-				this.y = y;
-
-				// if the points for polygon are collecting, we add another
-				// point
-				if (pointsOfPolygon != null) {
-					pointsOfPolygon.add(new Point2D.Double(x, y));
-				}
-
-				if (visible) {
-					invalidateParent();
-				}
-			}
+			changeAnimation = animation;
+			return animation;
 		}
 	}
 
@@ -792,6 +1130,87 @@ public class Turtle implements PaneObject {
 	 */
 	public void setPosition(Point2D point) {
 		setPosition(point.getX(), point.getY());
+	}
+
+	/**
+	 * Sets the position of the turtle. If the range style is not WINDOW and the
+	 * new coordinates are out of range, the new coordinate are the closest
+	 * location inside the range.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the desired turtle position.
+	 * @param y
+	 *            the Y-coordinate of the desired turtle position.
+	 */
+	public void setPosition(double x, double y) {
+		internalSetPosition(x, y, false);
+		addPolygonPoint(x, y);
+	}
+
+	/**
+	 * Internal method for setting position of the turtle.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the desired turtle position.
+	 * @param y
+	 *            the Y-coordinate of the desired turtle position.
+	 * @param inAnimation
+	 *            true, if the method is executed as a part of animation, false
+	 *            otherwise.
+	 */
+	private void internalSetPosition(double x, double y, boolean inAnimation) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			if (!inAnimation) {
+				assertNoAnimation();
+			}
+
+			Point2D position = new Point2D.Double(x, y);
+			applyLocationRestrictions(position);
+
+			if ((this.x != position.getX()) || (this.y != position.getY())) {
+				this.x = position.getX();
+				this.y = position.getY();
+
+				if (visible) {
+					invalidateParent();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Applies location restrictions for given position that follows from active
+	 * ranges and boundaries.
+	 * 
+	 * @param position
+	 *            the position of turtle.
+	 */
+	private void applyLocationRestrictions(Point2D position) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			// update position to fit active range (only if the range style
+			// differs from WINDOW)
+			if (rangeStyle != RangeStyle.WINDOW) {
+				// compute active range
+				Rectangle2D activeRange = range;
+				if ((activeRange == null) && (parentPane != null)) {
+					activeRange = new Rectangle2D.Double(0, 0, parentPane.getWidth(), parentPane.getHeight());
+				}
+
+				// if x and y are not inside the range, change them to fit the
+				// range
+				if (activeRange != null) {
+					if (!isInside(position.getX(), position.getY(), activeRange)) {
+						double x = position.getX();
+						double y = position.getY();
+						x = Math.max(x, activeRange.getMinX());
+						x = Math.min(x, activeRange.getMaxX());
+						y = Math.max(y, activeRange.getMinY());
+						y = Math.min(y, activeRange.getMaxY());
+						position.setLocation(x, y);
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -843,14 +1262,9 @@ public class Turtle implements PaneObject {
 	 *            the Y-coordinate of the target position.
 	 */
 	public void moveTo(double x, double y) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			Point2D start = new Point2D.Double(this.x, this.y);
-			setPosition(x, y);
-			Point2D end = new Point2D.Double(this.x, this.y);
-
-			if (penDownState && (parentPane != null)) {
-				parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penWidth), penColor, null);
-			}
+		Animation animation = internalMoveTo(x, y);
+		if (animation != null) {
+			animation.startAndWait();
 		}
 	}
 
@@ -868,6 +1282,59 @@ public class Turtle implements PaneObject {
 	}
 
 	/**
+	 * Internal method that supports move-to operation with animations.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the target position.
+	 * @param y
+	 *            the Y-coordinate of the target position.
+	 * @return the movement animation.
+	 */
+	private Animation internalMoveTo(double x, double y) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+
+			final Point2D start = new Point2D.Double(this.x, this.y);
+			final Point2D end = new Point2D.Double(x, y);
+			applyLocationRestrictions(end);
+
+			// handle move-to without animations
+			if ((changeAnimationFactor <= 0) || (parentPane == null)) {
+				if (penDownState && (parentPane != null)) {
+					parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penWidth), penColor, null);
+				}
+
+				internalSetPosition(end.getX(), end.getY(), false);
+				addPolygonPoint(end.getX(), end.getY());
+				return null;
+			}
+
+			// create animated move-to
+			final PenState penState = new PenState(this);
+			MoveToMethodAnimator animator = new MoveToMethodAnimator(start, end, penState);
+			Animation animation = new Animation(Math.round(animator.getWeight() * changeAnimationFactor), animator);
+			animation.setFinalizer(new Runnable() {
+				@Override
+				public void run() {
+					synchronized (JPAZUtilities.getJPAZLock()) {
+						changeAnimation = null;
+						parentPane.setOverlay(Turtle.this, null);
+						if (penState.down) {
+							parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penState.width),
+									penState.color, null);
+						}
+						internalSetPosition(end.getX(), end.getY(), false);
+						addPolygonPoint(end.getX(), end.getY());
+					}
+				}
+			});
+
+			changeAnimation = animation;
+			return animation;
+		}
+	}
+
+	/**
 	 * Moves the turtle in the current direction. The path of the move depends
 	 * on the current range style.
 	 * 
@@ -875,7 +1342,23 @@ public class Turtle implements PaneObject {
 	 *            the length of the step.
 	 */
 	public void step(double length) {
+		Animation animation = internalStep(length);
+		if (animation != null) {
+			animation.startAndWait();
+		}
+	}
+
+	/**
+	 * Internal implementation of the step method.
+	 * 
+	 * @param length
+	 *            the length of the step.
+	 * @return the animation to be played.
+	 */
+	private Animation internalStep(double length) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+
 			// compute real range and range style
 			Rectangle2D realRange = range;
 			RangeStyle realRangeStyle = rangeStyle;
@@ -889,18 +1372,26 @@ public class Turtle implements PaneObject {
 			}
 
 			// case of a simple move
-			if ((realRangeStyle == RangeStyle.WINDOW) || (realRangeStyle == RangeStyle.FENCE)) {
-				moveTo(x + length * JPAZUtilities.degreeCos(90 - direction),
+			if (realRangeStyle == RangeStyle.WINDOW) {
+				return internalMoveTo(x + length * JPAZUtilities.degreeCos(90 - direction),
 						y - length * JPAZUtilities.degreeSin(90 - direction));
-				return;
 			}
 
 			// -- otherwise, the step is more complicated
+
+			// create list of animators that form the step
+			ArrayList<WeightedAnimator> animators = null;
+			PenState penState = null;
+			if ((changeAnimationFactor > 0) && (parentPane != null)) {
+				animators = new ArrayList<>();
+				penState = new PenState(this);
+			}
 
 			// set "moving" variables
 			double currentX = x;
 			double currentY = y;
 			double movingDirection = 90 - direction;
+			double turtleDirection = direction;
 			boolean stepBack = false;
 			if (length < 0) {
 				stepBack = true;
@@ -910,12 +1401,7 @@ public class Turtle implements PaneObject {
 
 			// while there is a positive distance to go, we just go
 			while (length > 0) {
-
-				// normalize moving direction
-				movingDirection %= 360;
-				if (movingDirection < 0) {
-					movingDirection += 360;
-				}
+				movingDirection = JPAZUtilities.normalizeAngleInDegrees(movingDirection);
 
 				// compute normalized coordinates of the move
 				double xMove = JPAZUtilities.degreeCos(movingDirection);
@@ -932,43 +1418,73 @@ public class Turtle implements PaneObject {
 				double targetY = currentY - length * yMove;
 
 				// if the end-point is inside the range, we are done
-				if (realRange.contains(targetX, targetY)) {
-					moveTo(targetX, targetY);
+				if (isInside(targetX, targetY, realRange)) {
+					if (animators != null) {
+						Point2D targetPoint = new Point2D.Double(targetX, targetY);
+						applyLocationRestrictions(targetPoint);
+						animators.add(new MoveToMethodAnimator(new Point2D.Double(currentX, currentY), targetPoint,
+								penState));
+						addPolygonPoint(targetX, targetY);
+					} else {
+						moveTo(targetX, targetY);
+					}
 
-					// if bounce mode, we change the direction
-					if (realRangeStyle == RangeStyle.BOUNCE) {
+					// if bounce mode (without animations), we change the
+					// direction
+					if ((realRangeStyle == RangeStyle.BOUNCE) && (animators == null)) {
 						setDirection(stepBack ? 270 - movingDirection : 90 - movingDirection);
 					}
 
+					currentX = targetX;
+					currentY = targetY;
 					break;
 				}
 
 				// if the end-point is outside the range, we have to reduce
 				// length of the step to finish on the range border
-				double dy = Math.abs(length * yMove);
-
-				if (targetY < realRange.getMinY()) {
-					stepLength = Math.abs(currentY - realRange.getMinY()) / dy * stepLength;
-					crossingBorder = 1;
-				} else if (targetY > realRange.getMaxY()) {
-					stepLength = Math.abs(currentY - realRange.getMaxY()) / dy * stepLength;
-					crossingBorder = 3;
+				if (yMove > 0) {
+					double d = Math.abs((currentY - realRange.getMinY()) / yMove);
+					if (d <= stepLength) {
+						crossingBorder = 1;
+						stepLength = d;
+					}
+				} else if (yMove < 0) {
+					double d = Math.abs((realRange.getMaxY() - currentY) / yMove);
+					if (d <= stepLength) {
+						crossingBorder = 3;
+						stepLength = d;
+					}
 				}
+
+				if (xMove > 0) {
+					double d = Math.abs((realRange.getMaxX() - currentX) / xMove);
+					if (d <= stepLength) {
+						crossingBorder = 2;
+						stepLength = d;
+					}
+				} else if (xMove < 0) {
+					double d = Math.abs((currentX - realRange.getMinX()) / xMove);
+					if (d <= stepLength) {
+						crossingBorder = 4;
+						stepLength = d;
+					}
+				}
+
 				targetX = currentX + stepLength * xMove;
 				targetY = currentY - stepLength * yMove;
 
-				double dx = Math.abs(length * xMove);
-				if (targetX < realRange.getMinX()) {
-					stepLength = Math.abs(currentX - realRange.getMinX()) / dx * stepLength;
-					crossingBorder = 4;
-				} else if (targetX > realRange.getMaxX()) {
-					stepLength = Math.abs(currentX - realRange.getMaxX()) / dx * stepLength;
-					crossingBorder = 2;
-				}
-				targetX = currentX + stepLength * xMove;
-				targetY = currentY - stepLength * yMove;
+				targetX = Math.min(Math.max(targetX, realRange.getMinX()), realRange.getMaxX());
+				targetY = Math.min(Math.max(targetY, realRange.getMinY()), realRange.getMaxY());
 
-				moveTo(targetX, targetY);
+				if (animators != null) {
+					Point2D targetPoint = new Point2D.Double(targetX, targetY);
+					applyLocationRestrictions(targetPoint);
+					animators.add(
+							new MoveToMethodAnimator(new Point2D.Double(currentX, currentY), targetPoint, penState));
+					addPolygonPoint(targetX, targetY);
+				} else {
+					moveTo(targetX, targetY);
+				}
 				length -= stepLength;
 
 				// change position in case of the WRAP mode
@@ -983,7 +1499,11 @@ public class Turtle implements PaneObject {
 						targetX = realRange.getMaxX();
 					}
 
-					setPosition(targetX, targetY);
+					if (animators == null) {
+						setPosition(targetX, targetY);
+					} else {
+						addPolygonPoint(targetX, targetY);
+					}
 				}
 
 				// change moving direction in case of the BOUNCE mode
@@ -993,12 +1513,59 @@ public class Turtle implements PaneObject {
 					} else if ((crossingBorder == 2) || (crossingBorder == 4)) {
 						movingDirection = 180 - movingDirection;
 					}
+
+					double newTurtleDirection = JPAZUtilities
+							.normalizeAngleInDegrees(stepBack ? 270 - movingDirection : 90 - movingDirection);
+					if ((turtleDirection != newTurtleDirection) && (animators != null)) {
+						boolean clockwise = JPAZUtilities
+								.normalizeAngleInDegrees(newTurtleDirection - turtleDirection) < 180;
+						animators.add(new TurnMethodAnimator(turtleDirection, newTurtleDirection, clockwise));
+					}
+
+					turtleDirection = newTurtleDirection;
 				}
 
 				currentX = targetX;
 				currentY = targetY;
+
+				if (realRangeStyle == RangeStyle.FENCE) {
+					break;
+				}
+			}
+
+			// create step animation as composition of move-to and turn
+			// animations
+			if (animators != null) {
+				final StepMethodAnimator stepAnimator = new StepMethodAnimator(parentPane, animators);
+				Animation animation = new Animation(Math.round(stepAnimator.getWeight() * changeAnimationFactor),
+						stepAnimator);
+
+				final Point2D finalPoint = new Point2D.Double(currentX, currentY);
+				final double finalDirection = turtleDirection;
+				animation.setFinalizer(new Runnable() {
+					@Override
+					public void run() {
+						synchronized (JPAZUtilities.getJPAZLock()) {
+							changeAnimation = null;
+
+							parentPane.setOverlay(Turtle.this, null);
+							internalSetDirection(finalDirection, false);
+							internalSetPosition(finalPoint.getX(), finalPoint.getY(), false);
+
+							PanePainter painter = stepAnimator.getOverlay(1.0);
+							if (painter != null) {
+								parentPane.paint(painter);
+							}
+						}
+					}
+				});
+
+				changeAnimation = animation;
+				return animation;
 			}
 		}
+
+		return null;
 	}
 
 	/**
@@ -1083,9 +1650,7 @@ public class Turtle implements PaneObject {
 	 *            the location.
 	 */
 	public void turnTowards(Point2D point) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			setDirection(directionTowards(point));
-		}
+		turnTowards(point.getX(), point.getY());
 	}
 
 	/**
@@ -1097,8 +1662,76 @@ public class Turtle implements PaneObject {
 	 *            the Y-coordinate of the location.
 	 */
 	public void turnTowards(double x, double y) {
+		Animation animation = internalTurnTowards(x, y);
+		if (animation != null) {
+			animation.startAndWait();
+		}
+	}
+
+	/**
+	 * Internally method for turning this turtle towards the specified location.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the location.
+	 * @param y
+	 *            the Y-coordinate of the location.
+	 * @return the animation to be played.
+	 */
+	private Animation internalTurnTowards(double x, double y) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			double turnChange = JPAZUtilities.normalizeAngleInDegrees(directionTowards(x, y) - direction);
+			if (turnChange > 180) {
+				turnChange -= 360;
+			}
+
+			return internalTurn(turnChange);
+		}
+	}
+
+	/**
+	 * Sets direction of the turtle towards the specified location.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the location.
+	 * @param y
+	 *            the Y-coordinate of the location.
+	 */
+	public void setDirectionTowards(double x, double y) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			setDirection(directionTowards(x, y));
+		}
+	}
+
+	/**
+	 * Sets direction of the turtle towards the specified location.
+	 * 
+	 * @param point
+	 *            the location.
+	 */
+	public void setDirectionTowards(Point2D point) {
+		setDirectionTowards(point.getX(), point.getY());
+	}
+
+	/**
+	 * Adds point to polygon.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the polygon point.
+	 * @param y
+	 *            the Y-coordinate of the polygon point.
+	 */
+	private void addPolygonPoint(double x, double y) {
+		if (pointsOfPolygon != null) {
+			pointsOfPolygon.add(new Point2D.Double(x, y));
+		}
+	}
+
+	/**
+	 * Throws exception if there is an active animation.
+	 */
+	private void assertNoAnimation() {
+		if (changeAnimation != null) {
+			throw new IllegalStateException("The turtle is animated.");
 		}
 	}
 
@@ -1114,6 +1747,7 @@ public class Turtle implements PaneObject {
 	 */
 	public void print(String message) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
 			if (parentPane != null) {
 				parentPane.drawString(new Point2D.Double(x, y), direction, message, font, penColor, false);
 			}
@@ -1128,6 +1762,7 @@ public class Turtle implements PaneObject {
 	 */
 	public void printCenter(String message) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
 			if (parentPane != null) {
 				parentPane.drawString(new Point2D.Double(x, y), direction, message, font, penColor, true);
 			}
@@ -1145,8 +1780,9 @@ public class Turtle implements PaneObject {
 	 */
 	public int textWidth(String message) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (parentPane == null)
+			if (parentPane == null) {
 				return 0;
+			}
 
 			FontMetrics metrics = parentPane.getFontMetrics(font);
 			return metrics.stringWidth(message);
@@ -1160,8 +1796,9 @@ public class Turtle implements PaneObject {
 	 */
 	public int getTextHeight() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (parentPane == null)
+			if (parentPane == null) {
 				return 0;
+			}
 
 			FontMetrics metrics = parentPane.getFontMetrics(font);
 			return metrics.getHeight();
@@ -1175,6 +1812,7 @@ public class Turtle implements PaneObject {
 	public void openPolygon() {
 		closePolygon();
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
 			pointsOfPolygon = new ArrayList<Point2D>();
 			pointsOfPolygon.add(getPosition());
 		}
@@ -1186,14 +1824,17 @@ public class Turtle implements PaneObject {
 	 */
 	public void closePolygon() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (pointsOfPolygon == null)
+			assertNoAnimation();
+			if (pointsOfPolygon == null) {
 				return;
+			}
 
 			if (parentPane != null) {
 				// prepare polygon shape
 				Polygon polygon = new Polygon();
-				for (Point2D point : pointsOfPolygon)
+				for (Point2D point : pointsOfPolygon) {
 					polygon.addPoint((int) Math.round(point.getX()), (int) Math.round(point.getY()));
+				}
 
 				parentPane.fill(polygon, new BasicStroke((float) penWidth), penColor, fillColor);
 			}
@@ -1209,13 +1850,36 @@ public class Turtle implements PaneObject {
 	 *            the radius of the circle.
 	 */
 	public void dot(double radius) {
-		if (radius < 0)
+		if (radius < 0) {
 			radius = 0;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (parentPane != null)
+			assertNoAnimation();
+			if (parentPane != null) {
 				parentPane.fill(new Ellipse2D.Double(x - radius, y - radius, 2 * radius, 2 * radius),
 						new BasicStroke((float) penWidth), penColor, fillColor);
+			}
+		}
+	}
+
+	/**
+	 * Paints a circle with specified radius.
+	 * 
+	 * @param radius
+	 *            the radius of the circle.
+	 */
+	public void circle(double radius) {
+		if (radius < 0) {
+			radius = 0;
+		}
+
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+			if (parentPane != null) {
+				parentPane.draw(new Ellipse2D.Double(x - radius, y - radius, 2 * radius, 2 * radius),
+						new BasicStroke((float) penWidth), penColor, null);
+			}
 		}
 	}
 
@@ -1224,11 +1888,11 @@ public class Turtle implements PaneObject {
 	 */
 	public void stamp() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
 			if (parentPane != null) {
-				final Turtle that = this;
-				parentPane.doPainterPaint(new PanePainter() {
-					public void doPaint(Graphics2D graphics) {
-						shape.paintTurtle(that, graphics);
+				parentPane.paint(new PanePainter() {
+					public void paint(Graphics2D graphics) {
+						shape.paintTurtle(Turtle.this, graphics);
 					}
 				});
 			}
@@ -1273,6 +1937,8 @@ public class Turtle implements PaneObject {
 	 */
 	public void setPane(Pane newParentPane) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			assertNoAnimation();
+
 			if (parentPane != newParentPane) {
 				// say former parent about going away
 				if (parentPane != null) {
@@ -1370,14 +2036,16 @@ public class Turtle implements PaneObject {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			int viewCount = shape.getViewCount();
 			viewIndex = viewIndex % viewCount;
-			if (viewIndex < 0)
+			if (viewIndex < 0) {
 				viewIndex = viewCount + viewIndex;
+			}
 
 			if (this.viewIndex != viewIndex) {
 				this.viewIndex = viewIndex;
 
-				if (visible)
+				if (visible) {
 					invalidateParent();
+				}
 			}
 		}
 	}
@@ -1418,14 +2086,16 @@ public class Turtle implements PaneObject {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			int frameCount = shape.getFrameCount();
 			frameIndex = frameIndex % frameCount;
-			if (frameIndex < 0)
+			if (frameIndex < 0) {
 				frameIndex = frameCount + frameIndex;
+			}
 
 			if (this.frameIndex != frameIndex) {
 				this.frameIndex = frameIndex;
 
-				if (visible)
+				if (visible) {
 					invalidateParent();
+				}
 			}
 		}
 	}
@@ -1497,8 +2167,9 @@ public class Turtle implements PaneObject {
 	 */
 	public void setShapeAnimation(boolean enabled) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (this.animatedShape == enabled)
+			if (this.animatedShape == enabled) {
 				return;
+			}
 
 			this.animatedShape = enabled;
 			updateAnimationTimer();
@@ -1589,5 +2260,21 @@ public class Turtle implements PaneObject {
 	 */
 	private static String generateDefaultTurtleName() {
 		return "Turtle" + (turtleCounter + 1);
+	}
+
+	/**
+	 * Returns whether point lies inside rectangle.
+	 * 
+	 * @param x
+	 *            the X-coordinate of the point.
+	 * @param y
+	 *            the Y-coordinate of the point.
+	 * @param rectangle
+	 *            the rectangle.
+	 * @return true, if the point lies inside rectangle, false otherwise.
+	 */
+	private static boolean isInside(double x, double y, Rectangle2D rectangle) {
+		return (rectangle.getMinX() <= x) && (x <= rectangle.getMaxX()) && (rectangle.getMinY() <= y)
+				&& (y <= rectangle.getMaxY());
 	}
 }

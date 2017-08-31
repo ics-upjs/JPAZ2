@@ -5,12 +5,13 @@ import java.awt.*;
 /**
  * The interface for painters to pane graphics content
  */
-public interface PanePainter {
+interface PanePainter {
+	
 	/**
 	 * Paints to the pane graphics.
 	 * 
 	 * @param graphics
 	 *            the graphics
 	 */
-	void doPaint(Graphics2D graphics);
+	void paint(Graphics2D graphics);
 }

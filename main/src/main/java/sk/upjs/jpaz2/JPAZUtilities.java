@@ -168,6 +168,22 @@ public final class JPAZUtilities {
 	}
 
 	/**
+	 * Normalizes angle in degrees.
+	 * 
+	 * @param angle
+	 *            the angle in degrees.
+	 * @return the normalized angle.
+	 */
+	public static double normalizeAngleInDegrees(double angle) {
+		angle %= 360.0;
+		if (angle < 0) {
+			angle += 360.0;
+		}
+
+		return angle;
+	}
+
+	/**
 	 * Computes sines of an angle in degrees.
 	 * 
 	 * @param angle

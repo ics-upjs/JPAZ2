@@ -6,6 +6,8 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -15,6 +17,7 @@ import javax.imageio.ImageIO;
  * provides the methods for basic handling of mouse and keyboard events.
  */
 public class Pane implements PaneObject {
+
 	/**
 	 * The transparent color, i.e., color with alpha channel set to 0.
 	 */
@@ -121,7 +124,12 @@ public class Pane implements PaneObject {
 	private BufferedImage backBuffer = null;
 
 	/**
-	 * True, if the antialiasing is on.
+	 * Map of drawable overlays.
+	 */
+	private final Map<Object, PanePainter> overlays = new HashMap<>();
+
+	/**
+	 * True, if the antialiasing is on, false otherwise.
 	 */
 	private boolean antialiased = true;
 
@@ -448,10 +456,7 @@ public class Pane implements PaneObject {
 	 *            the desired rotation angle in degrees.
 	 */
 	public void setRotation(double rotation) {
-		// normalize rotation angle
-		rotation %= 360.0;
-		if (rotation < 0)
-			rotation += 360.0;
+		rotation = JPAZUtilities.normalizeAngleInDegrees(rotation);
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (this.rotation != rotation) {
@@ -866,26 +871,41 @@ public class Pane implements PaneObject {
 	private void repaintBackBuffer() {
 		// if content of the back buffer is still valid, we don't need to
 		// repaint it
-		if (!invalidated)
+		if (!invalidated) {
 			return;
+		}
 
 		// create graphics for accessing back buffer
 		Graphics2D dbg = backBuffer.createGraphics();
 
 		// prepare the background
-		if (transparentBackground || (backgroundColor == null))
+		if (transparentBackground || (backgroundColor == null)) {
 			dbg.setBackground(TRANSPARENT_COLOR);
-		else
+		} else {
 			dbg.setBackground(backgroundColor);
+		}
 
 		dbg.clearRect(0, 0, backBuffer.getWidth(), backBuffer.getHeight());
 
 		// paint content of pane
 		dbg.drawImage(content, null, 0, 0);
 
+		// paint overlays
+		for (PanePainter overlay : overlays.values()) {
+			Graphics2D g2d = (Graphics2D) dbg.create();
+			if (antialiased) {
+				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			}
+			overlay.paint(g2d);
+			g2d.dispose();
+		}
+
 		// draw objects on the pane
-		for (PaneObject o : children)
-			o.paintToPaneGraphics((Graphics2D) dbg.create());
+		for (PaneObject o : children) {
+			Graphics2D g2d = (Graphics2D) dbg.create();
+			o.paintToPaneGraphics(g2d);
+			g2d.dispose();
+		}
 
 		// draw border
 		if ((borderWidth > 0) && (borderColor != null)) {
@@ -944,14 +964,16 @@ public class Pane implements PaneObject {
 			invalidated = true;
 
 			// notify the parent that its content is also invalidated
-			if (parentPane != null)
+			if (parentPane != null) {
 				parentPane.invalidate();
+			}
 
 			// notify change listeners
 			if (!changeListeners.isEmpty()) {
 				PaneChangeEvent e = new PaneChangeEvent(this);
-				for (PaneChangeListener l : changeListeners)
+				for (PaneChangeListener l : changeListeners) {
 					l.paneInvalidated(e);
+				}
 			}
 		}
 	}
@@ -991,6 +1013,31 @@ public class Pane implements PaneObject {
 			g.setComposite(AlphaComposite.Clear);
 			g.fillRect(0, 0, content.getWidth(), content.getHeight());
 			g.dispose();
+			invalidate();
+		}
+	}
+
+	/**
+	 * Sets overlay associated with given object. The method is internal method.
+	 * 
+	 * @param object
+	 *            an object to which the overlay is associated, it is used as
+	 *            identifier of the painter.
+	 * @param painter
+	 *            the painter of the overlay.
+	 */
+	void setOverlay(Object object, PanePainter painter) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			if (object == null) {
+				return;
+			}
+
+			if (painter == null) {
+				overlays.remove(object);
+			} else {
+				overlays.put(object, painter);
+			}
+
 			invalidate();
 		}
 	}
@@ -1093,11 +1140,13 @@ public class Pane implements PaneObject {
 			if (children.remove(o)) {
 
 				// update special sublists
-				if (o instanceof Turtle)
+				if (o instanceof Turtle) {
 					turtles.remove((Turtle) o);
+				}
 
-				if (o instanceof Pane)
+				if (o instanceof Pane) {
 					panes.remove((Pane) o);
+				}
 
 				o.setPane(null);
 				invalidate();
@@ -1112,12 +1161,14 @@ public class Pane implements PaneObject {
 	 *            the pane object that will be moved
 	 */
 	public void bringToFront(PaneObject o) {
-		if (o == null)
+		if (o == null) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (!children.contains(o))
+			if (!children.contains(o)) {
 				throw new RuntimeException("Object is not living in this pane.");
+			}
 
 			children.remove(o);
 			children.add(o);
@@ -1144,8 +1195,9 @@ public class Pane implements PaneObject {
 	 *            the pane object that will be moved
 	 */
 	public void bringToBack(PaneObject o) {
-		if (o == null)
+		if (o == null) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			if (!children.contains(o))
@@ -1179,15 +1231,18 @@ public class Pane implements PaneObject {
 	 *            the pane object to front of which the object o will be moved
 	 */
 	public void bringToFrontOf(PaneObject o, PaneObject location) {
-		if ((o == null) || (o == location))
+		if ((o == null) || (o == location)) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (!children.contains(o))
+			if (!children.contains(o)) {
 				throw new RuntimeException("Object is not living in this pane.");
+			}
 
-			if (!children.contains(location))
+			if (!children.contains(location)) {
 				throw new RuntimeException("Location object is not living in this pane.");
+			}
 
 			children.remove(o);
 			children.add(children.indexOf(location) + 1, o);
@@ -1195,16 +1250,20 @@ public class Pane implements PaneObject {
 			// update special sublists
 			if (o instanceof Turtle) {
 				turtles.clear();
-				for (PaneObject po : children)
-					if (po instanceof Turtle)
+				for (PaneObject po : children) {
+					if (po instanceof Turtle) {
 						turtles.add((Turtle) po);
+					}
+				}
 			}
 
 			if (o instanceof Pane) {
 				panes.clear();
-				for (PaneObject po : children)
-					if (po instanceof Pane)
+				for (PaneObject po : children) {
+					if (po instanceof Pane) {
 						panes.add((Pane) po);
+					}
+				}
 			}
 
 			invalidate();
@@ -1221,15 +1280,18 @@ public class Pane implements PaneObject {
 	 *            the pane object to back of which the object o will be moved
 	 */
 	public void bringToBackOf(PaneObject o, PaneObject location) {
-		if ((o == null) || (o == location))
+		if ((o == null) || (o == location)) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (!children.contains(o))
+			if (!children.contains(o)) {
 				throw new RuntimeException("Object is not living in this pane.");
+			}
 
-			if (!children.contains(location))
+			if (!children.contains(location)) {
 				throw new RuntimeException("Location object is not living in this pane.");
+			}
 
 			children.remove(o);
 			children.add(children.indexOf(location), o);
@@ -1237,16 +1299,20 @@ public class Pane implements PaneObject {
 			// update special sublists
 			if (o instanceof Turtle) {
 				turtles.clear();
-				for (PaneObject po : children)
-					if (po instanceof Turtle)
+				for (PaneObject po : children) {
+					if (po instanceof Turtle) {
 						turtles.add((Turtle) po);
+					}
+				}
 			}
 
 			if (o instanceof Pane) {
 				panes.clear();
-				for (PaneObject po : children)
-					if (po instanceof Pane)
+				for (PaneObject po : children) {
+					if (po instanceof Pane) {
 						panes.add((Pane) po);
+					}
+				}
 			}
 
 			invalidate();
@@ -1444,15 +1510,17 @@ public class Pane implements PaneObject {
 				if (type == MouseEvent.MOUSE_PRESSED) {
 					// stop event fire in case of invalid state (pressing of a
 					// button that is already pressed)
-					if (holdMouseButtons[buttonIdx])
+					if (holdMouseButtons[buttonIdx]) {
 						return;
+					}
 
 					holdMouseButtons[buttonIdx] = true;
 				} else if ((type == MouseEvent.MOUSE_RELEASED)) {
 					// stop event fire in case of invalid state (release of a
 					// button that is already released)
-					if (!holdMouseButtons[buttonIdx])
+					if (!holdMouseButtons[buttonIdx]) {
 						return;
+					}
 
 					holdMouseButtons[buttonIdx] = false;
 				}
@@ -1471,13 +1539,15 @@ public class Pane implements PaneObject {
 				if (fireAllowed && (!eventWanted)) {
 					if (childPane.containsPoint(x, y)) {
 						childPane.fireMouseEvent(x, y, type, detail, false);
-						if (!childPane.isMouseTransparent())
+						if (!childPane.isMouseTransparent()) {
 							fireAllowed = false;
+						}
 					}
 				}
 
-				if (eventWanted)
+				if (eventWanted) {
 					childPane.fireMouseEvent(x, y, type, detail, false);
+				}
 
 				index--;
 			}
@@ -1547,13 +1617,15 @@ public class Pane implements PaneObject {
 	private boolean mouseEventWanted(int type, int buttonIdx) {
 		// if a mouse button is released, and we remember that it was pressed
 		// over this pane, we want to receive the event
-		if ((type == MouseEvent.MOUSE_RELEASED) && (buttonIdx >= 0) && (holdMouseButtons[buttonIdx]))
+		if ((type == MouseEvent.MOUSE_RELEASED) && (buttonIdx >= 0) && (holdMouseButtons[buttonIdx])) {
 			return true;
+		}
 
 		// mouse dragged is wanted whenever a mouse button was pressed over this
 		// pane
-		if ((type == MouseEvent.MOUSE_DRAGGED) && (holdMouseButtons[0] || holdMouseButtons[1] || holdMouseButtons[2]))
+		if ((type == MouseEvent.MOUSE_DRAGGED) && (holdMouseButtons[0] || holdMouseButtons[1] || holdMouseButtons[2])) {
 			return true;
+		}
 
 		return false;
 	}
@@ -1665,8 +1737,9 @@ public class Pane implements PaneObject {
 			}
 
 			// broadcast the event to all child panes
-			for (Pane childPane : panes)
+			for (Pane childPane : panes) {
 				childPane.fireKeyEvent(type, detail);
+			}
 		}
 	}
 
@@ -1832,15 +1905,17 @@ public class Pane implements PaneObject {
 	 */
 	protected boolean onCanClick(int x, int y) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (panes.isEmpty())
+			if (panes.isEmpty()) {
 				return false;
+			}
 
 			ArrayList<Pane> copyOfPanes = new ArrayList<Pane>(panes);
 			int index = copyOfPanes.size() - 1;
 			while (index >= 0) {
 				Pane childPane = copyOfPanes.get(index);
-				if (childPane.containsPoint(x, y) && childPane.canClick(x, y, true))
+				if (childPane.containsPoint(x, y) && childPane.canClick(x, y, true)) {
 					return true;
+				}
 
 				index--;
 			}
@@ -1869,8 +1944,9 @@ public class Pane implements PaneObject {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Graphics2D g2 = content.createGraphics();
 
-			if (antialiased)
+			if (antialiased) {
 				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			}
 
 			// set stroke, color, and paint
 			g2.setStroke(stroke);
@@ -1878,8 +1954,9 @@ public class Pane implements PaneObject {
 			g2.setPaint(paint);
 
 			// draw the shape
-			if (shape != null)
+			if (shape != null) {
 				g2.draw(shape);
+			}
 
 			g2.dispose();
 			invalidate();
@@ -1902,8 +1979,9 @@ public class Pane implements PaneObject {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Graphics2D g2 = content.createGraphics();
 
-			if (antialiased)
+			if (antialiased) {
 				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			}
 
 			// set stroke, color, and paint
 			g2.setStroke(stroke);
@@ -1911,8 +1989,9 @@ public class Pane implements PaneObject {
 			g2.setPaint(paint);
 
 			// draw the shape
-			if (shape != null)
+			if (shape != null) {
 				g2.fill(shape);
+			}
 
 			g2.dispose();
 			invalidate();
@@ -1941,24 +2020,28 @@ public class Pane implements PaneObject {
 	 */
 	void drawString(Point2D position, double direction, String message, Font font, Color color,
 			boolean centerAtPosition) {
-		if (message == null)
+		if (message == null) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Graphics2D g2 = content.createGraphics();
 
-			if (antialiased)
+			if (antialiased) {
 				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			}
 
 			g2.translate(position.getX(), position.getY());
 			g2.rotate(Math.toRadians(270 + direction));
 
 			// set font and color
-			if (font != null)
+			if (font != null) {
 				g2.setFont(font);
+			}
 
-			if (color != null)
+			if (color != null) {
 				g2.setColor(color);
+			}
 
 			// draw message
 			if (centerAtPosition) {
@@ -1980,13 +2063,17 @@ public class Pane implements PaneObject {
 	 * @param painter
 	 *            the paint painter
 	 */
-	void doPainterPaint(PanePainter painter) {
-		if (painter == null)
+	void paint(PanePainter painter) {
+		if (painter == null) {
 			return;
+		}
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			Graphics2D g = content.createGraphics();
-			painter.doPaint(g);
+			if (antialiased) {
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			}
+			painter.paint(g);
 			g.dispose();
 			invalidate();
 		}
@@ -2062,8 +2149,9 @@ public class Pane implements PaneObject {
 	 */
 	void addPaneChangeListener(PaneChangeListener l) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			if (!changeListeners.contains(l))
+			if (!changeListeners.contains(l)) {
 				changeListeners.add(l);
+			}
 		}
 	}
 
@@ -2104,7 +2192,7 @@ public class Pane implements PaneObject {
 			throw new RuntimeException("Invalid filename (no filename extension).");
 		}
 		String format = filename.substring(dotSeparator + 1).toLowerCase();
-		
+
 		BufferedImage bufferedImage;
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			repaintBackBuffer();
