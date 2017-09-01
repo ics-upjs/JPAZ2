@@ -439,16 +439,26 @@ public class Turtle implements PaneObject {
 	private TickTimer shapeAnimationTimer = null;
 
 	/**
-	 * Multiplication factor for change animations. The factor determines
-	 * duration of animated change of the state. If the factor is 0, animations
+	 * Multiplication factor for move-turn animations. The factor determines
+	 * duration of animation (smaller is faster). If the factor is 0, animations
 	 * are disabled.
 	 */
-	private double changeAnimationFactor = 0;
+	private double moveTurnSpeed = 0;
 
 	/**
-	 * Currently active change animation.
+	 * Currently active move-turn animation.
 	 */
-	private Animation changeAnimation;
+	private Animation moveTurnAnimation;
+
+	/**
+	 * Reference identification of the instance.
+	 */
+	protected final String referenceIdentification;
+
+	/**
+	 * Result of toString.
+	 */
+	private volatile String toStringResult;
 
 	// ---------------------------------------------------------------------------------------------------
 	// Constructors
@@ -484,6 +494,7 @@ public class Turtle implements PaneObject {
 	 *            the name for the turtle.
 	 */
 	public Turtle(double x, double y, String name) {
+		referenceIdentification = JPAZUtilities.retrieveInternalId(super.toString());
 		setPosition(x, y);
 		setName(name);
 		turtleCounter++;
@@ -860,6 +871,12 @@ public class Turtle implements PaneObject {
 				if (visible) {
 					invalidateParent();
 				}
+
+				if (name != null) {
+					toStringResult = name + " (@" + referenceIdentification + ")";
+				} else {
+					toStringResult = super.toString();
+				}
 			}
 		}
 	}
@@ -1035,29 +1052,33 @@ public class Turtle implements PaneObject {
 	}
 
 	/**
-	 * Sets the movement animation factor that determines speed of movement
-	 * animations.
+	 * Sets the speed of move and turn actions.
 	 * 
-	 * @param movementAnimationFactor
-	 *            the movement animation factor or 0 if movement animations
-	 *            should be disabled.
+	 * @param moveTurnSpeed
+	 *            the speed of move and turn actions (smaller is faster), the
+	 *            value 0 disabled animations during turn and move/step actions.
 	 */
-	public void setMovementAnimationFactor(double movementAnimationFactor) {
-		movementAnimationFactor = Math.max(movementAnimationFactor, 0);
+	public void setMoveTurnSpeed(double moveTurnSpeed) {
+		moveTurnSpeed = Math.max(moveTurnSpeed, 0);
 
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			this.changeAnimationFactor = movementAnimationFactor;
+			if (JPAZUtilities.isHeadlessMode()) {
+				this.moveTurnSpeed = 0;
+			} else {
+				this.moveTurnSpeed = moveTurnSpeed;
+			}
 		}
 	}
 
 	/**
-	 * Returns the movement animation factor.
+	 * Returns the speed of move and turn actions.
 	 * 
-	 * @return the movement animation factor.
+	 * @return the speed of move and turn actions.
+	 * @see #setMoveTurnSpeed(double)
 	 */
-	public double getMovementAnimationFactor() {
+	public double getMoveTurnSpeed() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
-			return this.changeAnimationFactor;
+			return this.moveTurnSpeed;
 		}
 	}
 
@@ -1095,7 +1116,7 @@ public class Turtle implements PaneObject {
 			assertNoAnimation();
 
 			// handle turn without animations
-			if ((changeAnimationFactor <= 0) || (parentPane == null)) {
+			if ((moveTurnSpeed <= 0) || (parentPane == null)) {
 				setDirection(direction + angle);
 				return null;
 			}
@@ -1103,19 +1124,18 @@ public class Turtle implements PaneObject {
 			// turn with animations
 			final double endDirection = direction + angle;
 			TurnMethodAnimator animator = new TurnMethodAnimator(direction, endDirection, angle >= 0);
-			Animation animation = new Animation(Math.round(animator.getAngleChange() * changeAnimationFactor),
-					animator);
+			Animation animation = new Animation(Math.round(animator.getAngleChange() * moveTurnSpeed), animator);
 			animation.setFinalizer(new Runnable() {
 				@Override
 				public void run() {
 					synchronized (JPAZUtilities.getJPAZLock()) {
-						changeAnimation = null;
+						moveTurnAnimation = null;
 						internalSetDirection(endDirection, false);
 					}
 				}
 			});
 
-			changeAnimation = animation;
+			moveTurnAnimation = animation;
 			return animation;
 		}
 	}
@@ -1299,7 +1319,7 @@ public class Turtle implements PaneObject {
 			applyLocationRestrictions(end);
 
 			// handle move-to without animations
-			if ((changeAnimationFactor <= 0) || (parentPane == null)) {
+			if ((moveTurnSpeed <= 0) || (parentPane == null)) {
 				if (penDownState && (parentPane != null)) {
 					parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penWidth), penColor, null);
 				}
@@ -1312,12 +1332,12 @@ public class Turtle implements PaneObject {
 			// create animated move-to
 			final PenState penState = new PenState(this);
 			MoveToMethodAnimator animator = new MoveToMethodAnimator(start, end, penState);
-			Animation animation = new Animation(Math.round(animator.getWeight() * changeAnimationFactor), animator);
+			Animation animation = new Animation(Math.round(animator.getWeight() * moveTurnSpeed), animator);
 			animation.setFinalizer(new Runnable() {
 				@Override
 				public void run() {
 					synchronized (JPAZUtilities.getJPAZLock()) {
-						changeAnimation = null;
+						moveTurnAnimation = null;
 						parentPane.setOverlay(Turtle.this, null);
 						if (penState.down) {
 							parentPane.draw(new Line2D.Double(start, end), new BasicStroke((float) penState.width),
@@ -1329,7 +1349,7 @@ public class Turtle implements PaneObject {
 				}
 			});
 
-			changeAnimation = animation;
+			moveTurnAnimation = animation;
 			return animation;
 		}
 	}
@@ -1382,7 +1402,7 @@ public class Turtle implements PaneObject {
 			// create list of animators that form the step
 			ArrayList<WeightedAnimator> animators = null;
 			PenState penState = null;
-			if ((changeAnimationFactor > 0) && (parentPane != null)) {
+			if ((moveTurnSpeed > 0) && (parentPane != null)) {
 				animators = new ArrayList<>();
 				penState = new PenState(this);
 			}
@@ -1537,8 +1557,7 @@ public class Turtle implements PaneObject {
 			// animations
 			if (animators != null) {
 				final StepMethodAnimator stepAnimator = new StepMethodAnimator(parentPane, animators);
-				Animation animation = new Animation(Math.round(stepAnimator.getWeight() * changeAnimationFactor),
-						stepAnimator);
+				Animation animation = new Animation(Math.round(stepAnimator.getWeight() * moveTurnSpeed), stepAnimator);
 
 				final Point2D finalPoint = new Point2D.Double(currentX, currentY);
 				final double finalDirection = turtleDirection;
@@ -1546,7 +1565,7 @@ public class Turtle implements PaneObject {
 					@Override
 					public void run() {
 						synchronized (JPAZUtilities.getJPAZLock()) {
-							changeAnimation = null;
+							moveTurnAnimation = null;
 
 							parentPane.setOverlay(Turtle.this, null);
 							internalSetDirection(finalDirection, false);
@@ -1560,7 +1579,7 @@ public class Turtle implements PaneObject {
 					}
 				});
 
-				changeAnimation = animation;
+				moveTurnAnimation = animation;
 				return animation;
 			}
 		}
@@ -1730,7 +1749,7 @@ public class Turtle implements PaneObject {
 	 * Throws exception if there is an active animation.
 	 */
 	private void assertNoAnimation() {
-		if (changeAnimation != null) {
+		if (moveTurnAnimation != null) {
 			throw new IllegalStateException("The turtle is animated.");
 		}
 	}
@@ -2248,11 +2267,7 @@ public class Turtle implements PaneObject {
 
 	@Override
 	public String toString() {
-		if (name != null) {
-			return name;
-		} else {
-			return super.toString();
-		}
+		return toStringResult;
 	}
 
 	/**

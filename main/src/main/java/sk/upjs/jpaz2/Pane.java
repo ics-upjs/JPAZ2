@@ -207,6 +207,16 @@ public class Pane implements PaneObject {
 	 */
 	private final KeyEventManager keyEventManager;
 
+	/**
+	 * Simple name of the class.
+	 */
+	private final String className;
+
+	/**
+	 * Reference identification of the instance.
+	 */
+	protected final String referenceIdentification;
+
 	// ---------------------------------------------------------------------------------------------------
 	// Constructors
 	// ---------------------------------------------------------------------------------------------------
@@ -246,6 +256,17 @@ public class Pane implements PaneObject {
 	public Pane(int x, int y, int width, int height) {
 		this.x = x;
 		this.y = y;
+
+		// set identifications
+		referenceIdentification = JPAZUtilities.retrieveInternalId(super.toString());
+		if (this.getClass() != null) {
+			className = this.getClass().getSimpleName();
+		} else {
+			className = "Pane";
+		}
+
+		// lock headless mode
+		JPAZUtilities.lockHeadlessMode();
 
 		// prepare tick timer
 		tickTimer = new TickTimer(this.toString()) {
@@ -2175,7 +2196,7 @@ public class Pane implements PaneObject {
 
 	@Override
 	public String toString() {
-		return "Pane (" + super.toString() + ")";
+		return className + " (@" + referenceIdentification + ")";
 	}
 
 	/**

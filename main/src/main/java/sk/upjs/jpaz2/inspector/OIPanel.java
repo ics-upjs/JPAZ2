@@ -3,6 +3,7 @@ package sk.upjs.jpaz2.inspector;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import javax.swing.*;
@@ -223,8 +224,7 @@ public class OIPanel extends JPanel {
 				PropertyItem pi = (PropertyItem) rowObject;
 				// if it is not a read-only property, we change its value
 				if (!pi.isReadOnly)
-					OIInvoker.changePropertyValue(inspectedObject,
-							pi.propertyDescriptor, value);
+					OIInvoker.changePropertyValue(inspectedObject, pi.propertyDescriptor, value);
 			}
 		}
 
@@ -240,18 +240,15 @@ public class OIPanel extends JPanel {
 					// read-only viewing or
 					// there is a support for its editing and the the value is
 					// not read only
-					Class<?> propertyClass = pi.propertyDescriptor
-							.getPropertyType();
+					Class<?> propertyClass = pi.propertyDescriptor.getPropertyType();
 
 					// if the property value is not known, the property is
 					// surelly not editable
 					if (pi.value instanceof UnknownValue)
 						return false;
 
-					return classSupporter
-							.isAdvancedReadSupported(propertyClass)
-							|| (!pi.isReadOnly && classSupporter
-									.isWriteSupported(propertyClass));
+					return classSupporter.isAdvancedReadSupported(propertyClass)
+							|| (!pi.isReadOnly && classSupporter.isWriteSupported(propertyClass));
 				}
 			}
 
@@ -315,8 +312,7 @@ public class OIPanel extends JPanel {
 			Object rowObject = rowBinding.get(rowIndex);
 
 			// handle click on class row (collapse or expand properties)
-			if ((e.getButton() == MouseEvent.BUTTON1)
-					&& (rowObject instanceof ClassItem)) {
+			if ((e.getButton() == MouseEvent.BUTTON1) && (rowObject instanceof ClassItem)) {
 				ClassItem ci = (ClassItem) rowObject;
 				ci.propertiesCollapsed = !ci.propertiesCollapsed;
 				updatePropertiesRowBinding();
@@ -358,8 +354,7 @@ public class OIPanel extends JPanel {
 			if (rowObject instanceof MethodItem) {
 				MethodItem mi = (MethodItem) rowObject;
 				if (colIndex == 0)
-					return new OIMethodNameValue(
-							mi.methodDescriptor.getMethod());
+					return new OIMethodNameValue(mi.methodDescriptor.getMethod());
 
 				if (colIndex == 1)
 					return new OIMethodInvokerValue();
@@ -402,30 +397,24 @@ public class OIPanel extends JPanel {
 			Object rowObject = rowBinding.get(rowIndex);
 
 			// handle click on class row (collapse or expand properties)
-			if ((e.getButton() == MouseEvent.BUTTON1)
-					&& (rowObject instanceof ClassItem)) {
+			if ((e.getButton() == MouseEvent.BUTTON1) && (rowObject instanceof ClassItem)) {
 				ClassItem ci = (ClassItem) rowObject;
 				ci.methodsCollapsed = !ci.methodsCollapsed;
 				updateMethodsRowBinding();
 			}
 
 			// handle double-click on method name to show the invocation frame
-			if ((e.getButton() == MouseEvent.BUTTON1)
-					&& (rowObject instanceof MethodItem)) {
-				if (((colIndex == 0) && (e.getClickCount() > 1))
-						|| (colIndex == 1)) {
+			if ((e.getButton() == MouseEvent.BUTTON1) && (rowObject instanceof MethodItem)) {
+				if (((colIndex == 0) && (e.getClickCount() > 1)) || (colIndex == 1)) {
 					MethodItem mi = (MethodItem) rowObject;
 
 					if (mi.frame == null) {
-						mi.frame = new OIMethodInvocationFrame(inspectedObject,
-								mi.methodDescriptor.getMethod());
+						mi.frame = new OIMethodInvocationFrame(inspectedObject, mi.methodDescriptor.getMethod());
 
 						if (JPAZUtilities.isSmartLocationEnabled()) {
 							try {
-								OIMethodInvocationFrame.moveToSmartLocation(
-										mi.frame, (Frame) SwingUtilities
-												.getRoot((Component) e
-														.getSource()));
+								OIMethodInvocationFrame.moveToSmartLocation(mi.frame,
+										(Frame) SwingUtilities.getRoot((Component) e.getSource()));
 							} catch (Exception ex) {
 								// if smart location fails, nothing to do
 							}
@@ -485,8 +474,7 @@ public class OIPanel extends JPanel {
 	/**
 	 * Manager of supported class types
 	 */
-	private OIClassSupporter classSupporter = OIClassSupporter
-			.createDefaultClassSupporter();
+	private OIClassSupporter classSupporter = OIClassSupporter.createDefaultClassSupporter();
 
 	// --------------------------------------------------------------------------------------------
 	// Constructors
@@ -520,9 +508,9 @@ public class OIPanel extends JPanel {
 	 */
 	public void setInspectedObject(Object object, Class<?> stopClass) {
 		// checked whether there is something new
-		if ((this.inspectedObject == object)
-				&& (this.inspectionStopClass == stopClass))
+		if ((this.inspectedObject == object) && (this.inspectionStopClass == stopClass)) {
 			return;
+		}
 
 		// stop periodical update of values
 		stopPeriodicUpdate();
@@ -535,8 +523,9 @@ public class OIPanel extends JPanel {
 		analyseInspectedObject();
 
 		// start periodical update of property values
-		if (this.inspectedObject != null)
+		if (this.inspectedObject != null) {
 			startPeriodicUpdate();
+		}
 	}
 
 	/**
@@ -569,8 +558,7 @@ public class OIPanel extends JPanel {
 		propertiesTM = new PropertiesTableModel();
 		propertiesTM.setColumnNames("Property", "Value");
 		OITable propertiesTable = new OITable(propertiesTM, classSupporter);
-		propertiesTable.setRowColors(new Color[] { new Color(255, 255, 191),
-				new Color(255, 255, 222) });
+		propertiesTable.setRowColors(new Color[] { new Color(255, 255, 191), new Color(255, 255, 222) });
 
 		// set columns widths
 		TableColumnModel cm = propertiesTable.getColumnModel();
@@ -591,8 +579,7 @@ public class OIPanel extends JPanel {
 		methodsTM = new MethodsTableModel();
 		methodsTM.setColumnNames("Method", "");
 		OITable methodsTable = new OITable(methodsTM, classSupporter);
-		methodsTable.setRowColors(new Color[] { new Color(255, 255, 191),
-				new Color(255, 255, 222) });
+		methodsTable.setRowColors(new Color[] { new Color(255, 255, 191), new Color(255, 255, 222) });
 		methodsTable.getColumnModel().getColumn(1).setMinWidth(25);
 		methodsTable.getColumnModel().getColumn(1).setMaxWidth(25);
 		methodsTable.getColumnModel().getColumn(1).setResizable(false);
@@ -617,10 +604,13 @@ public class OIPanel extends JPanel {
 		// analyze each class in the hierarchy
 		for (ClassItem ci : classes) {
 			propertiesTM.rowBinding.add(ci);
-			if (!ci.propertiesCollapsed)
-				for (PropertyItem pi : ci.properties)
-					if (pi.isSupported)
+			if (!ci.propertiesCollapsed) {
+				for (PropertyItem pi : ci.properties) {
+					if (pi.isSupported) {
 						propertiesTM.rowBinding.add(pi);
+					}
+				}
+			}
 		}
 
 		// notify change
@@ -637,10 +627,13 @@ public class OIPanel extends JPanel {
 		// analyze each class in the hierarchy
 		for (ClassItem ci : classes) {
 			methodsTM.rowBinding.add(ci);
-			if (!ci.methodsCollapsed)
-				for (MethodItem mi : ci.methods)
-					if (mi.isSupported)
+			if (!ci.methodsCollapsed) {
+				for (MethodItem mi : ci.methods) {
+					if (mi.isSupported) {
 						methodsTM.rowBinding.add(mi);
+					}
+				}
+			}
 		}
 
 		// notify change
@@ -710,13 +703,13 @@ public class OIPanel extends JPanel {
 					pi.isReadOnly = (pd.getWriteMethod() == null);
 
 					// add the property record to the proper class record
-					Class<?> declaringClass = pd.getReadMethod()
-							.getDeclaringClass();
-					for (ClassItem ci : classes)
+					Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
+					for (ClassItem ci : classes) {
 						if (ci.cl.equals(declaringClass)) {
 							ci.properties.add(pi);
 							break;
 						}
+					}
 				}
 			}
 		}
@@ -731,11 +724,12 @@ public class OIPanel extends JPanel {
 
 				// add the method record to the proper class record
 				Class<?> declaringClass = md.getMethod().getDeclaringClass();
-				for (ClassItem ci : classes)
+				for (ClassItem ci : classes) {
 					if (ci.cl.equals(declaringClass)) {
 						ci.methods.add(mi);
 						break;
 					}
+				}
 			}
 		}
 
@@ -770,38 +764,38 @@ public class OIPanel extends JPanel {
 			// value
 			for (PropertyItem pi : ci.properties) {
 				pi.isSupported = (!(pi.propertyDescriptor instanceof IndexedPropertyDescriptor))
-						&& (classSupporter
-								.isReadSupported(pi.propertyDescriptor
-										.getPropertyType()));
+						&& (classSupporter.isReadSupported(pi.propertyDescriptor.getPropertyType()));
 
-				if (pi.isSupported)
+				if (pi.isSupported) {
 					ci.supportedPropertiesCount++;
+				}
 			}
 
 			// check methods
 			for (MethodItem mi : ci.methods) {
 				// checked whether all parameters are editable
 				boolean allParametersOK = true;
-				Class<?>[] parameterTypes = mi.methodDescriptor.getMethod()
-						.getParameterTypes();
-				if (parameterTypes != null)
-					for (Class<?> parameterType : parameterTypes)
-						if (!classSupporter.isWriteSupported(parameterType))
+				Class<?>[] parameterTypes = mi.methodDescriptor.getMethod().getParameterTypes();
+				if (parameterTypes != null) {
+					for (Class<?> parameterType : parameterTypes) {
+						if (!classSupporter.isWriteSupported(parameterType)) {
 							allParametersOK = false;
+						}
+					}
+				}
 
 				// check whether the result of the method can be displayed or is
 				// void
-				Class<?> returnType = mi.methodDescriptor.getMethod()
-						.getReturnType();
-				boolean resultOK = (Void.class.equals(returnType)
-						|| void.class.equals(returnType) || classSupporter
-						.isReadSupported(returnType));
+				Class<?> returnType = mi.methodDescriptor.getMethod().getReturnType();
+				boolean resultOK = (Void.class.equals(returnType) || void.class.equals(returnType)
+						|| classSupporter.isReadSupported(returnType));
 
 				// decide about the support
-				mi.isSupported = allParametersOK && resultOK;
+				mi.isSupported = allParametersOK && resultOK && isVisibleMethod(mi.methodDescriptor.getMethod());
 
-				if (mi.isSupported)
+				if (mi.isSupported) {
 					ci.supportedMethodsCount++;
+				}
 			}
 
 			// set expanded/collapsed in such a way that only the first active
@@ -821,6 +815,32 @@ public class OIPanel extends JPanel {
 		}
 	}
 
+	/**
+	 * Returns whether method is visible in the object inspector.
+	 * 
+	 * @param method
+	 *            the method.
+	 * @return true, if the method is visible, false otherwise.
+	 */
+	private boolean isVisibleMethod(Method method) {
+		// hide wait methods of the Object
+		if (Object.class.equals(method.getDeclaringClass())) {
+			if ("wait".equals(method.getName())) {
+				return false;
+			}
+			
+			if ("notify".equals(method.getName())) {
+				return false;
+			}
+			
+			if ("notifyAll".equals(method.getName())) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Management of the thread updating current values of properties of the
 	// inspected object
@@ -835,17 +855,18 @@ public class OIPanel extends JPanel {
 		// list properties that will be updated - only supported properties are
 		// updated
 		ArrayList<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
-		for (ClassItem ci : classes)
-			for (PropertyItem pi : ci.properties)
-				if (pi.isSupported)
+		for (ClassItem ci : classes) {
+			for (PropertyItem pi : ci.properties) {
+				if (pi.isSupported) {
 					properties.add(pi.propertyDescriptor);
+				}
+			}
+		}
 
 		// creates the update thread
-		propertyUpdateThread = new PropertyUpdateThread(inspectedObject,
-				properties) {
+		propertyUpdateThread = new PropertyUpdateThread(inspectedObject, properties) {
 			@Override
-			public void updateValuesInSwing(
-					Map<PropertyDescriptor, Object> values) {
+			public void updateValuesInSwing(Map<PropertyDescriptor, Object> values) {
 				// move current values from thread to OIPanel
 				// this method is always invoked in EDT, i.e., no
 				// synchronization is necessary

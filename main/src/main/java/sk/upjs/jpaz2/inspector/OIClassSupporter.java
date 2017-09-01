@@ -1,6 +1,7 @@
 package sk.upjs.jpaz2.inspector;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
 import javax.swing.table.*;
 
@@ -45,14 +46,13 @@ class OIClassSupporter {
 	 * @param editor
 	 *            the standard editor
 	 */
-	public void addClassSupport(Class<?> aClass, TableCellRenderer renderer,
-			TableCellEditor readOnlyEditor, TableCellEditor editor) {
+	public void addClassSupport(Class<?> aClass, TableCellRenderer renderer, TableCellEditor readOnlyEditor,
+			TableCellEditor editor) {
 		if (aClass == null)
 			throw new NullPointerException("Class type must be given.");
 
 		if (renderer == null)
-			throw new NullPointerException(
-					"At least renderer must be non-null.");
+			throw new NullPointerException("At least renderer must be non-null.");
 
 		ClassRecord cr = new ClassRecord();
 		cr.renderer = renderer;
@@ -176,63 +176,45 @@ class OIClassSupporter {
 		TableCellRenderer defaultRenderer = new OIDefaultCellRenderer();
 
 		// visualization types
-		result.addClassSupport(OIRowSeparatorValue.class,
-				new OIRowSeparatorRenderer(), null, null);
-		result.addClassSupport(OIPropertyNameValue.class,
-				new OIPropertyNameRenderer(), null, null);
-		result.addClassSupport(OIMethodNameValue.class,
-				new OIMethodNameRenderer(), null, null);
-		result.addClassSupport(OITypeValue.class, new OITypeRenderer(), null,
-				null);
-		result.addClassSupport(OIParameterValue.class, new OIParameterRenderer(), null,
-				null);
-		result.addClassSupport(OIMethodInvokerValue.class,
-				new OIMethodInvokerRenderer(), null, null);
-		result.addClassSupport(UnknownValue.class, defaultRenderer,
-				null, null);
+		result.addClassSupport(OIRowSeparatorValue.class, new OIRowSeparatorRenderer(), null, null);
+		result.addClassSupport(OIPropertyNameValue.class, new OIPropertyNameRenderer(), null, null);
+		result.addClassSupport(OIMethodNameValue.class, new OIMethodNameRenderer(), null, null);
+		result.addClassSupport(OITypeValue.class, new OITypeRenderer(), null, null);
+		result.addClassSupport(OIParameterValue.class, new OIParameterRenderer(), null, null);
+		result.addClassSupport(OIMethodInvokerValue.class, new OIMethodInvokerRenderer(), null, null);
+		result.addClassSupport(UnknownValue.class, defaultRenderer, null, null);
 
 		// Boolean
-		result.addClassSupport(Boolean.class, defaultRenderer, null,
-				new OIBooleanCellEditor(true));
-		result.addClassSupport(boolean.class, defaultRenderer, null,
-				new OIBooleanCellEditor(false));
+		result.addClassSupport(Boolean.class, defaultRenderer, null, new OIBooleanCellEditor(true));
+		result.addClassSupport(boolean.class, defaultRenderer, null, new OIBooleanCellEditor(false));
 
 		// Numerical values
-		result.addClassSupport(Integer.class, defaultRenderer, null,
-				new OINumberEditor(Integer.class));
-		result.addClassSupport(int.class, defaultRenderer, null,
-				new OINumberEditor(int.class));
-		result.addClassSupport(Byte.class, defaultRenderer, null,
-				new OINumberEditor(Byte.class));
-		result.addClassSupport(byte.class, defaultRenderer, null,
-				new OINumberEditor(byte.class));
-		result.addClassSupport(Long.class, defaultRenderer, null,
-				new OINumberEditor(Long.class));
-		result.addClassSupport(long.class, defaultRenderer, null,
-				new OINumberEditor(long.class));
-		result.addClassSupport(Float.class, defaultRenderer, null,
-				new OINumberEditor(Float.class));
-		result.addClassSupport(float.class, defaultRenderer, null,
-				new OINumberEditor(float.class));
-		result.addClassSupport(Double.class, defaultRenderer, null,
-				new OINumberEditor(Double.class));
-		result.addClassSupport(double.class, defaultRenderer, null,
-				new OINumberEditor(double.class));
+		result.addClassSupport(Integer.class, defaultRenderer, null, new OINumberEditor(Integer.class));
+		result.addClassSupport(int.class, defaultRenderer, null, new OINumberEditor(int.class));
+		result.addClassSupport(Byte.class, defaultRenderer, null, new OINumberEditor(Byte.class));
+		result.addClassSupport(byte.class, defaultRenderer, null, new OINumberEditor(byte.class));
+		result.addClassSupport(Long.class, defaultRenderer, null, new OINumberEditor(Long.class));
+		result.addClassSupport(long.class, defaultRenderer, null, new OINumberEditor(long.class));
+		result.addClassSupport(Float.class, defaultRenderer, null, new OINumberEditor(Float.class));
+		result.addClassSupport(float.class, defaultRenderer, null, new OINumberEditor(float.class));
+		result.addClassSupport(Double.class, defaultRenderer, null, new OINumberEditor(Double.class));
+		result.addClassSupport(double.class, defaultRenderer, null, new OINumberEditor(double.class));
 
 		// String
-		result.addClassSupport(String.class, defaultRenderer, null,
-				new OIStringEditor());
+		result.addClassSupport(String.class, defaultRenderer, null, new OIStringEditor());
 
 		// char
 		result.addClassSupport(char.class, new OICharRenderer(), null, new OICharEditor());
 		result.addClassSupport(Character.class, new OICharRenderer(), null, new OICharEditor());
 
 		// enumeration
-		result.addClassSupport(Enum.class, defaultRenderer, null,
-				new OIEnumEditor());
+		result.addClassSupport(Enum.class, defaultRenderer, null, new OIEnumEditor());
 
 		// color
 		result.addClassSupport(Color.class, new OIColorRenderer(), null, new OIColorEditor());
+
+		// file
+		result.addClassSupport(File.class, defaultRenderer, null, new OIFileEditor());
 
 		return result;
 	}

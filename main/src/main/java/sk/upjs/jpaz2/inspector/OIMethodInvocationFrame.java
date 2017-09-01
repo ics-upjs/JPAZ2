@@ -54,7 +54,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			ParameterItem rowObject = (ParameterItem) rowBinding.get(rowIndex);
 			if (columnIndex == 1) {
 				rowObject.value = value;
-				checkValidityOfParameters();
+				checkParameters();
 			}
 		}
 
@@ -62,8 +62,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			ParameterItem rowObject = (ParameterItem) rowBinding.get(rowIndex);
 			if (colIndex == 0) {
 				if (rowObject.name != null)
-					return new OIParameterValue(rowObject.name,
-							rowObject.classType);
+					return new OIParameterValue(rowObject.name, rowObject.classType);
 				else
 					return new OITypeValue(rowObject.classType);
 			} else
@@ -145,13 +144,38 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	}
 
 	// --------------------------------------------------------------------------------------------
+	// Internal class that contains data related to an object
+	// --------------------------------------------------------------------------------------------
+
+	/**
+	 * Internal class that contains data related to an object.
+	 */
+	private static class ObjectDetails {
+
+		/**
+		 * List of visible invocation frames related to the object.
+		 */
+		final ArrayList<OIMethodInvocationFrame> frames = new ArrayList<>();
+
+		/**
+		 * Indicates whether the execution of method of the object is locked.
+		 */
+		boolean locked;
+	}
+
+	// --------------------------------------------------------------------------------------------
 	// Class variables
 	// --------------------------------------------------------------------------------------------
 
 	/**
 	 * Shared instance of Paranamer that reads parameter names from bytecode
 	 */
-	private static Paranamer parameterNameReader = new CachingParanamer(new AdaptiveParanamer());
+	private static final Paranamer parameterNameReader = new CachingParanamer(new AdaptiveParanamer());
+
+	/**
+	 * Map that maps objects to list of open invocation frames.
+	 */
+	private static final Map<Object, ObjectDetails> objects = new IdentityHashMap<>();
 
 	// --------------------------------------------------------------------------------------------
 	// Instance variables
@@ -160,12 +184,12 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	/**
 	 * Object whose method is invoked
 	 */
-	private Object object;
+	private final Object object;
 
 	/**
 	 * Method for invocation
 	 */
-	private Method method;
+	private final Method method;
 
 	/**
 	 * True, if the method for invocation can provide parameter names
@@ -200,8 +224,17 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	/**
 	 * Manager of supported class types
 	 */
-	private OIClassSupporter classSupporter = OIClassSupporter
-			.createDefaultClassSupporter();
+	private OIClassSupporter classSupporter = OIClassSupporter.createDefaultClassSupporter();
+
+	/**
+	 * Indicates whether execution is locked.
+	 */
+	private boolean executeLocked = false;
+
+	/**
+	 * Indicates whether parameters allows execution.
+	 */
+	private boolean executableParameters = false;
 
 	// --------------------------------------------------------------------------------------------
 	// Constructor
@@ -220,9 +253,22 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		this.object = object;
 		this.method = method;
 
+		this.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				registerVisibleFrame(true, OIMethodInvocationFrame.this);
+				executeLocked = isLocked(OIMethodInvocationFrame.this.object);
+				updateExecuteButton();
+			}
+
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				registerVisibleFrame(false, OIMethodInvocationFrame.this);
+			}
+		});
+
 		// check whether parameter names are available
-		String[] parameterNames = parameterNameReader.lookupParameterNames(
-				method, false);
+		String[] parameterNames = parameterNameReader.lookupParameterNames(method, false);
 		if ((parameterNames == null) || (parameterNames.length == 0))
 			methodSupportsParameterNames = false;
 		else
@@ -235,8 +281,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 
 		// set icon
 		try {
-			setIconImage(ImageIO.read(this.getClass().getResource(
-					"/sk/upjs/jpaz2/images/execute.png")));
+			setIconImage(ImageIO.read(this.getClass().getResource("/sk/upjs/jpaz2/images/execute.png")));
 		} catch (Exception e) {
 			// nothing to do
 		}
@@ -268,7 +313,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		constructExecuteAndResultPart();
 
 		// enable/disable execute button
-		checkValidityOfParameters();
+		checkParameters();
 	}
 
 	/**
@@ -310,8 +355,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		label.setFont(label.getFont().deriveFont(0));
 		valuesPanel.add(label);
 
-		label = new JLabel(object.getClass().getSimpleName() + " ("
-				+ object.getClass().getName() + ")");
+		label = new JLabel(object.getClass().getSimpleName() + " (" + object.getClass().getName() + ")");
 		label.setFont(label.getFont().deriveFont(0));
 		valuesPanel.add(label);
 
@@ -332,8 +376,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		// get parameter names if available
 		String[] parameterNames = null;
 		if (methodSupportsParameterNames)
-			parameterNames = parameterNameReader.lookupParameterNames(method,
-					false);
+			parameterNames = parameterNameReader.lookupParameterNames(method, false);
 
 		// create table model
 		parametersTM = new ParametersTableModel();
@@ -356,23 +399,22 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			parametersTM.setColumnNames("Type", "Value");
 
 		parametersTable = new OITable(parametersTM, classSupporter);
-		parametersTable.setRowColors(new Color[] { new Color(222, 255, 222),
-				new Color(191, 255, 191) });
+		parametersTable.setRowColors(new Color[] { new Color(222, 255, 222), new Color(191, 255, 191) });
 		parametersTable.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if ("tableCellEditor".equals(evt.getPropertyName())) {
 					if (parametersTable.isEditing())
 						executeButton.setEnabled(false);
 					else
-						checkValidityOfParameters();
+						checkParameters();
 				}
 			}
 		});
 
 		// add surrounding GUI components
 		JPanel parametersPanel = new JPanel();
-		parametersPanel.setPreferredSize(new Dimension(100, parametersTM
-				.getRowCount() * parametersTable.getRowHeight() + 52));
+		parametersPanel
+				.setPreferredSize(new Dimension(100, parametersTM.getRowCount() * parametersTable.getRowHeight() + 52));
 		parametersPanel.setLayout(new BorderLayout());
 		parametersPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
@@ -380,8 +422,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		header.setFont(header.getFont().deriveFont(Font.BOLD));
 		header.setBorder(BorderFactory.createEmptyBorder(0, 3, 5, 0));
 		parametersPanel.add(header, BorderLayout.PAGE_START);
-		parametersPanel.add(new JScrollPane(parametersTable),
-				BorderLayout.CENTER);
+		parametersPanel.add(new JScrollPane(parametersTable), BorderLayout.CENTER);
 
 		add(parametersPanel, BorderLayout.CENTER);
 	}
@@ -451,9 +492,8 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 					do {
 						SwingUtilities.invokeAndWait(new Runnable() {
 							public void run() {
-								setLocation(startX
-										+ (int) (3 - Math.random() * 6), startY
-										+ (int) (3 - Math.random() * 6));
+								setLocation(startX + (int) (3 - Math.random() * 6),
+										startY + (int) (3 - Math.random() * 6));
 							}
 						});
 						Thread.sleep(50);
@@ -471,7 +511,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 				}
 			}
 		};
-		
+
 		// start shaker thread
 		shaker.start();
 	}
@@ -483,9 +523,10 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	/**
 	 * Check whether all parameters required for method invocation are filled.
 	 */
-	private void checkValidityOfParameters() {
+	private void checkParameters() {
 		if (parametersTM == null) {
-			executeButton.setEnabled(true);
+			executableParameters = true;
+			updateExecuteButton();
 			return;
 		}
 
@@ -498,7 +539,15 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 				allParametersOK = false;
 		}
 
-		executeButton.setEnabled(allParametersOK);
+		executableParameters = allParametersOK;
+		updateExecuteButton();
+	}
+
+	/**
+	 * Updates state of execute button.
+	 */
+	private void updateExecuteButton() {
+		executeButton.setEnabled(executableParameters && !executeLocked);
 	}
 
 	/**
@@ -511,6 +560,9 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			parametersTable.setEnabled(false);
 		if (outputTable != null)
 			outputTable.setEnabled(false);
+
+		setExecutionLock(object, true);
+		executeButton.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.red));
 
 		// create array of parameters
 		Object[] parameters = new Object[method.getParameterTypes().length];
@@ -529,13 +581,15 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 	 * @param thrownException
 	 *            the exception thrown by the method
 	 */
-	private void handleMethodInvocationResult(Object result,
-			Exception thrownException) {
+	private void handleMethodInvocationResult(Object result, Exception thrownException) {
 		// set result
 		if (thrownException != null)
 			outputTM.setResult(new UnknownValue());
 		else
 			outputTM.setResult(result);
+
+		executeButton.setBorder(null);
+		setExecutionLock(object, false);
 
 		// show message if exception thrown
 		if (thrownException != null) {
@@ -545,13 +599,12 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			else
 				message = thrownException.toString();
 
-			JOptionPane.showMessageDialog(this,
-					"Thrown exception:\n" + message, "Exception",
+			JOptionPane.showMessageDialog(this, "Thrown exception:\n" + message, "Exception",
 					JOptionPane.ERROR_MESSAGE);
 		}
 
 		// enable GUI components
-		checkValidityOfParameters();
+		checkParameters();
 
 		if (parametersTable != null)
 			parametersTable.setEnabled(true);
@@ -559,13 +612,93 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			outputTable.setEnabled(true);
 	}
 
-	public void handleResult(final Object result,
-			final Exception thrownException) {
+	public void handleResult(final Object result, final Exception thrownException) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				handleMethodInvocationResult(result, thrownException);
 			}
 		});
+	}
+
+	// ---------------------------------------------------------------------------------------------------
+	// Serialization control
+	// ---------------------------------------------------------------------------------------------------
+
+	/**
+	 * Register frame to list of visible frames.
+	 * 
+	 * @param active
+	 *            true, if the frame is visible, false if hidden.
+	 * @param frame
+	 *            the frame to be registered.
+	 */
+	private static void registerVisibleFrame(boolean active, OIMethodInvocationFrame frame) {
+		Object object = frame.object;
+		if (active) {
+			ObjectDetails details = objects.get(object);
+			if (details == null) {
+				details = new ObjectDetails();
+				objects.put(object, details);
+			}
+
+			details.frames.add(frame);
+		} else {
+			ObjectDetails details = objects.get(object);
+			if (details != null) {
+				details.frames.remove(frame);
+				if (details.frames.isEmpty() && !details.locked) {
+					objects.remove(object);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Sets execution lock for all frames related to object.
+	 * 
+	 * @param object
+	 *            the object that should be locked.
+	 * @param lockState
+	 *            the new state of lock.
+	 */
+	private static void setExecutionLock(Object object, boolean lockState) {
+		ObjectDetails details = objects.get(object);
+		if (lockState && (details == null)) {
+			details = new ObjectDetails();
+			details.locked = true;
+			objects.put(object, details);
+			return;
+		}
+
+		if (details == null) {
+			return;
+		}
+
+		details.locked = lockState;
+		for (OIMethodInvocationFrame frame : details.frames) {
+			frame.executeLocked = lockState;
+			frame.updateExecuteButton();
+		}
+
+		if (!details.locked && details.frames.isEmpty()) {
+			objects.remove(object);
+		}
+	}
+
+	/**
+	 * Returns whether the object is locked.
+	 * 
+	 * @param object
+	 *            the object.
+	 * @return true, if the object is locked, false otherwise.
+	 */
+	private static boolean isLocked(Object object) {
+		ObjectDetails details = objects.get(object);
+		if (details == null) {
+			return false;
+		} else {
+			return details.locked;
+		}
 	}
 
 	// ---------------------------------------------------------------------------------------------------
@@ -580,8 +713,7 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 		// we try to get bounds of the docking screen
 		Rectangle dockingScreenBounds = null;
 		try {
-			dockingScreenBounds = dockingFrame.getGraphicsConfiguration()
-					.getBounds();
+			dockingScreenBounds = dockingFrame.getGraphicsConfiguration().getBounds();
 		} catch (Exception e) {
 			return;
 		}
@@ -642,15 +774,12 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 				int currentInfoCover = 0;
 				for (Rectangle r : frameBounds) {
 					if (r.intersects(currentFrameBounds)) {
-						Rectangle infoCoverRect = r
-								.intersection(currentFrameBounds);
-						currentInfoCover += infoCoverRect.width
-								* infoCoverRect.height;
+						Rectangle infoCoverRect = r.intersection(currentFrameBounds);
+						currentInfoCover += infoCoverRect.width * infoCoverRect.height;
 					}
 				}
 
-				int currentDistance = Math.abs(dockingFrame.getX()
-						- currentFrameBounds.x)
+				int currentDistance = Math.abs(dockingFrame.getX() - currentFrameBounds.x)
 						+ Math.abs(dockingFrame.getY() - currentFrameBounds.y);
 
 				if ((currentInfoCover < lowestCover)

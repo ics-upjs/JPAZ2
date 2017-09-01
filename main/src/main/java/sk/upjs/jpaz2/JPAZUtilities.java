@@ -132,6 +132,10 @@ public final class JPAZUtilities {
 	 *            the time in milliseconds.
 	 */
 	public static void delay(long time) {
+		if (isHeadlessMode()) {
+			return;
+		}
+
 		try {
 			Thread.sleep(time);
 		} catch (Exception e) {
@@ -249,6 +253,16 @@ public final class JPAZUtilities {
 	private static boolean smartLocationEnabled = true;
 
 	/**
+	 * Indicates whether headless mode is enabled.
+	 */
+	private static boolean headlessMode = false;
+
+	/**
+	 * Indicates whether headless mode is locked (cannot be changed).
+	 */
+	private static boolean headlessModeLocked = false;
+
+	/**
 	 * Returns whether windows shaking is enabled.
 	 * 
 	 * @return true, if windows shaking is enabled; false otherwise.
@@ -293,6 +307,39 @@ public final class JPAZUtilities {
 	public static void setSmartLocationEnabled(boolean smartLocationEnabled) {
 		synchronized (getJPAZLock()) {
 			JPAZUtilities.smartLocationEnabled = smartLocationEnabled;
+		}
+	}
+
+	/**
+	 * Returns whether headless mode is enabled.
+	 * 
+	 * @return true, if headless mode is enabled; false otherwise.
+	 */
+	public static boolean isHeadlessMode() {
+		synchronized (getJPAZLock()) {
+			return headlessMode;
+		}
+	}
+
+	/**
+	 * Sets headless mode.
+	 * 
+	 * @param headlessMode
+	 *            true, to enable headless mode; false to disable.
+	 */
+	public static void setHeadlessMode(boolean headlessMode) {
+		synchronized (getJPAZLock()) {
+			if (JPAZUtilities.headlessModeLocked) {
+				return;
+			}
+
+			JPAZUtilities.headlessMode = headlessMode;
+		}
+	}
+
+	public static void lockHeadlessMode() {
+		synchronized (getJPAZLock()) {
+			JPAZUtilities.headlessModeLocked = true;
 		}
 	}
 
@@ -348,6 +395,30 @@ public final class JPAZUtilities {
 			}
 
 			return tickExecutor;
+		}
+	}
+
+	// ---------------------------------------------------------------------------------------------------
+	// Demo
+	// ---------------------------------------------------------------------------------------------------
+
+	/**
+	 * Retrieves reference string from result of {@link Object#toString()}.
+	 * 
+	 * @param toStringResult
+	 *            the result of {@link Object#toString()}.
+	 * @return the string with identification of reference to the object.
+	 */
+	static String retrieveInternalId(String toStringResult) {
+		if (toStringResult == null) {
+			return null;
+		}
+
+		int atIdx = toStringResult.lastIndexOf('@');
+		if (atIdx < 0) {
+			return toStringResult;
+		} else {
+			return toStringResult.substring(atIdx + 1);
 		}
 	}
 
