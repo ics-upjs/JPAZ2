@@ -7,7 +7,7 @@ import sk.upjs.jpaz2.*;
 
 /**
  * Base class for creating stage. Each stage can configured to show several
- * scenes.
+ * scenes as a part of the game/show.
  */
 public abstract class Stage {
 
@@ -17,32 +17,32 @@ public abstract class Stage {
 	private static final String MUTE_MUSIC_KEY = "$mute-music";
 
 	/**
-	 * Indicates whether the game started.
+	 * Indicates whether the game/show is started.
 	 */
 	private boolean started;
 
 	/**
-	 * Width of all scenes of the game.
+	 * Width of all scenes on the stage.
 	 */
 	private final int width;
 
 	/**
-	 * Height of all scenes of the game.
+	 * Height of all scenes on the stage.
 	 */
 	private final int height;
 
 	/**
-	 * Name of the game.
+	 * Name of the stage (show/game).
 	 */
 	private final String name;
 
 	/**
-	 * Game icon.
+	 * The icon of the stage.
 	 */
 	private final ImageShape icon;
 
 	/**
-	 * Scenes of the game.
+	 * Scenes of the game/show that can be played on the stage.
 	 */
 	private final Map<String, Scene> scenes = new HashMap<String, Scene>();
 
@@ -57,12 +57,12 @@ public abstract class Stage {
 	private boolean mutedMusic;
 
 	/**
-	 * Window where the game is displayed.
+	 * Window where the stage is displayed.
 	 */
 	private JPAZWindow mainWindow;
 
 	/**
-	 * The current scene of the game.
+	 * The current scene presented on the stage.
 	 */
 	private Scene currentScene;
 
@@ -74,16 +74,16 @@ public abstract class Stage {
 	private final Preferences preferences;
 
 	/**
-	 * Constructs the game.
+	 * Constructs the stage.
 	 * 
 	 * @param name
-	 *            the name of game.
+	 *            the name of stage.
 	 * @param width
 	 *            the width of all scenes.
 	 * @param height
 	 *            the height of all scenes.
 	 * @param icon
-	 *            the icon of the game.
+	 *            the icon of the stage/show/game.
 	 */
 	public Stage(String name, int width, int height, ImageShape icon) {
 		this.name = name;
@@ -110,16 +110,19 @@ public abstract class Stage {
 	}
 
 	/**
-	 * Initializes components of the game.
+	 * Initializes components of the stage.
 	 */
 	protected abstract void initialize();
 
 	/**
-	 * Starts the game.
+	 * Starts playing on the stage.
+	 * 
+	 * @param initialScene
+	 *            the name of the initial (first) scene on the stage.
 	 */
 	public void run(String initialScene) {
 		if (started) {
-			throw new RuntimeException("Game can be started only once.");
+			throw new RuntimeException("Stage can be started only once.");
 		}
 
 		SplashFrame.showSplash(name);
@@ -308,7 +311,7 @@ public abstract class Stage {
 	}
 
 	/**
-	 * Adds scene to the game.
+	 * Adds scene to the stage.
 	 * 
 	 * @param name
 	 *            the name of scene.

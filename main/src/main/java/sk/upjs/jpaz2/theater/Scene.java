@@ -24,7 +24,9 @@ public abstract class Scene extends Pane {
 	}
 
 	/**
-	 * Returns the stage to which the scene belongs.
+	 * Returns the hosting stage, i.e., a stage to which the scene belongs.
+	 * 
+	 * @return the hosting stage.
 	 */
 	public Stage getStage() {
 		return stage;

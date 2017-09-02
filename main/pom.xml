@@ -4,12 +4,12 @@
 
 	<groupId>sk.upjs</groupId>
 	<artifactId>jpaz2</artifactId>
-	<version>1.0.4</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>JPAZ2</name>
 	<url>https://github.com/ics-upjs/JPAZ2</url>
-	<description>Framework for java beginners.</description>
+	<description>Educational framework for Java beginners.</description>
 
 	<issueManagement>
 		<system>github</system>
