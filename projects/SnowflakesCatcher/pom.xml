@@ -66,7 +66,7 @@
 									<mainClass>${exec.mainClass}</mainClass>
 								</transformer>
 							</transformers>
-							<minimizeJar>false</minimizeJar>
+							<minimizeJar>true</minimizeJar>
 							<finalName>${exec.finalName}</finalName>
 						</configuration>
 					</execution>
