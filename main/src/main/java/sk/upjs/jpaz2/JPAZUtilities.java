@@ -29,7 +29,7 @@ public final class JPAZUtilities {
 	/**
 	 * Lock used to coordinate and synchronize all JPAZ related atomic actions
 	 */
-	private static final Object JPAZLock = new Object();
+	private static final Object jpazLock = new Object();
 
 	/**
 	 * Returns the object used as synchronization lock for all JPAZ objects. In
@@ -40,7 +40,7 @@ public final class JPAZUtilities {
 	 * @return synchronization the lock object.
 	 */
 	public static synchronized Object getJPAZLock() {
-		return JPAZLock;
+		return jpazLock;
 	}
 
 	// ---------------------------------------------------------------------------------------------------
@@ -322,7 +322,7 @@ public final class JPAZUtilities {
 	}
 
 	/**
-	 * Sets headless mode.
+	 * Sets headless mode. The mode can be set only once.
 	 * 
 	 * @param headlessMode
 	 *            true, to enable headless mode; false to disable.
@@ -334,6 +334,7 @@ public final class JPAZUtilities {
 			}
 
 			JPAZUtilities.headlessMode = headlessMode;
+			JPAZUtilities.headlessModeLocked = true;
 		}
 	}
 

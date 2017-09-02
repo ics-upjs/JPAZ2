@@ -110,6 +110,11 @@ public class JPAZWindow {
 	 */
 	public JPAZWindow(Pane pane, boolean alignMode) {
 		synchronized (JPAZUtilities.getJPAZLock()) {
+			JPAZUtilities.lockHeadlessMode();
+			if (JPAZUtilities.isHeadlessMode()) {
+				throw new IllegalStateException("JPAZWindow is not allowed in headless mode.");
+			}
+
 			if (pane != null) {
 				width = pane.getWidth();
 				height = pane.getHeight();

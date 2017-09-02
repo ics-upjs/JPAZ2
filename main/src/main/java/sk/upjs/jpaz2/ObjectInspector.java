@@ -95,6 +95,11 @@ public class ObjectInspector {
 	 * invisible and empty.
 	 */
 	public ObjectInspector() {
+		JPAZUtilities.lockHeadlessMode();
+		if (JPAZUtilities.isHeadlessMode()) {
+			throw new IllegalStateException("Object inspector cannot is not allowed in headless mode.");
+		}
+
 		JPAZUtilities.invokeAndWait(new Runnable() {
 			public void run() {
 				prepareGUI();
