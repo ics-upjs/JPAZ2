@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-catalog xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-catalog/1.0.0 http://maven.apache.org/xsd/archetype-catalog-1.0.0.xsd"
+    xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-catalog/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <archetypes>
+    <archetype>
+      <groupId>sk.upjs.jpaz2.archetypes</groupId>
+      <artifactId>jpaz2-archetype-launcher</artifactId>
+      <version>1.1.0</version>
+      <description>An archetype which contains a sample Java project with empty launcher and JPAZ2 as a dependency.</description>
+    </archetype>
+    <archetype>
+      <groupId>sk.upjs.jpaz2.archetypes</groupId>
+      <artifactId>jpaz2-archetype-novice</artifactId>
+      <version>1.1.0</version>
+      <description>An archetype which contains a sample Java project for JPAZ2 novices. The launcher instantiates a pane which animates moves and turnings.</description>
+    </archetype>
+    <archetype>
+      <groupId>sk.upjs.jpaz2.archetypes</groupId>
+      <artifactId>jpaz2-archetype-quickstart</artifactId>
+      <version>1.1.0</version>
+      <description>An archetype which contains a sample Java project with launcher. The launcher instantiates WinPane, SmartTurtle (extending Turtle), and ObjectInspector.</description>
+    </archetype>
+    <archetype>
+      <groupId>sk.upjs.jpaz2.archetypes</groupId>
+      <artifactId>jpaz2-archetype-theater</artifactId>
+      <version>1.1.0</version>
+      <description>An archetype which contains a sample Java project based on theater subpackage included in JPAZ2.</description>
+    </archetype>
+  </archetypes>
+</archetype-catalog>
