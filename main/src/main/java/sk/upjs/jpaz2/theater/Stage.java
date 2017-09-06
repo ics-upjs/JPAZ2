@@ -339,6 +339,39 @@ public abstract class Stage {
 	}
 
 	/**
+	 * Returns scene with given name.
+	 * 
+	 * @param name
+	 *            the name of the scene.
+	 * @return the scene with given name.
+	 */
+	public Scene getScene(String name) {
+		return scenes.get(name);
+	}
+
+	/**
+	 * Returns scene with given name.
+	 * 
+	 * @param name
+	 *            the name of the scene.
+	 * @return the scene with given name.
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Scene> T getScene(String name, Class<T> sceneClass) {
+		Scene result = scenes.get(name);
+		if (result == null) {
+			return null;
+		}
+
+		if (sceneClass.isInstance(result)) {
+			return (T) result;
+		}
+
+		throw new IllegalArgumentException("Scene " + name + " is of the type " + result.getClass().getName()
+				+ ", but the type " + sceneClass.getName() + " is requested.");
+	}
+
+	/**
 	 * Sets value of a preference.
 	 * 
 	 * @param key
