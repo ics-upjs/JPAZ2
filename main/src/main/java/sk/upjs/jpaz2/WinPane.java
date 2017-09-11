@@ -431,7 +431,14 @@ public class WinPane extends Pane {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				synchronized (JPAZUtilities.getJPAZLock()) {
-					frame.setLocationRelativeTo(null);
+					Rectangle screenBounds = JPAZUtilities.getScreenBounds();
+					if (screenBounds == null) {
+						frame.setLocationRelativeTo(null);
+					} else {
+						int left = screenBounds.x + (screenBounds.width - getWidth()) / 2;
+						int top = screenBounds.y + (screenBounds.height - getHeight()) / 2;
+						frame.setLocation(left, top);
+					}
 				}
 			}
 		});

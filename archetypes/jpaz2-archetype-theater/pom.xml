@@ -4,7 +4,7 @@
 
 	<groupId>sk.upjs.jpaz2.archetypes</groupId>
 	<artifactId>jpaz2-archetype-theater</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<packaging>maven-archetype</packaging>
 
 	<url>https://github.com/ics-upjs/JPAZ2</url>

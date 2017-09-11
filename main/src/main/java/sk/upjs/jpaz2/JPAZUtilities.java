@@ -263,6 +263,11 @@ public final class JPAZUtilities {
 	private static boolean headlessModeLocked = false;
 
 	/**
+	 * Rectangle that defines area where JPAZ-related frames will be located.
+	 */
+	private static Rectangle screenBounds = null;
+
+	/**
 	 * Returns whether windows shaking is enabled.
 	 * 
 	 * @return true, if windows shaking is enabled; false otherwise.
@@ -338,9 +343,49 @@ public final class JPAZUtilities {
 		}
 	}
 
+	/**
+	 * Locks the headless mode. After invoking this method, headless mode cannot
+	 * be changed.
+	 */
 	public static void lockHeadlessMode() {
 		synchronized (getJPAZLock()) {
 			JPAZUtilities.headlessModeLocked = true;
+		}
+	}
+
+	/**
+	 * Defines are where JPAZ related frames/windows should be located.
+	 * 
+	 * @param boundingRectangle
+	 *            the area defined as rectangle or null, if no restrictions are
+	 *            applied.
+	 */
+	public static void setScreenBounds(Rectangle boundingRectangle) {
+		synchronized (getJPAZLock()) {
+			if (boundingRectangle == null) {
+				screenBounds = null;
+			} else {
+				if ((boundingRectangle.width < 1) || (boundingRectangle.height < 1)) {
+					throw new IllegalArgumentException("The bounding rectagle cannot be empty.");
+				}
+
+				screenBounds = new Rectangle(boundingRectangle);
+			}
+		}
+	}
+
+	/**
+	 * Returns area where JPAZ-related windows/frames should be located.
+	 * 
+	 * @return the area or null, if no restrictions are applied.
+	 */
+	public static Rectangle getScreenBounds() {
+		synchronized (getJPAZLock()) {
+			if (screenBounds == null) {
+				return null;
+			} else {
+				return new Rectangle(screenBounds);
+			}
 		}
 	}
 

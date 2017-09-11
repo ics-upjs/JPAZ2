@@ -11,6 +11,7 @@ import javax.swing.*;
 
 import com.thoughtworks.paranamer.*;
 
+import sk.upjs.jpaz2.JPAZUtilities;
 import sk.upjs.jpaz2.inspector.OIInvoker.*;
 
 @SuppressWarnings("serial")
@@ -718,6 +719,11 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 			return;
 		}
 
+		Rectangle screenBounds = JPAZUtilities.getScreenBounds();
+		if (screenBounds != null) {
+			dockingScreenBounds = screenBounds;
+		}
+
 		// we list all visible frames that are in the same screen as the docking
 		// frame
 		ArrayList<Frame> consideredFrames = new ArrayList<Frame>();
@@ -729,8 +735,9 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 
 			// we exclude frames that are not in the same screen as the docking
 			// frame
-			if (f.getBounds().intersects(dockingScreenBounds))
+			if (f.getBounds().intersects(dockingScreenBounds)) {
 				consideredFrames.add(f);
+			}
 		}
 
 		// look for position with the smallest number of intersections with
@@ -790,7 +797,8 @@ class OIMethodInvocationFrame extends JFrame implements ResultHandler {
 				}
 			}
 
-		if (location != null)
+		if (location != null) {
 			frame.setLocation(location);
+		}
 	}
 }

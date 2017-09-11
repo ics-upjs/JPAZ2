@@ -289,6 +289,12 @@ public class ObjectInspector {
 			// nothing to do
 		}
 
+		// set initial position
+		Rectangle screenBounds = JPAZUtilities.getScreenBounds();
+		if (screenBounds != null) {
+			frame.setLocation(screenBounds.x, screenBounds.y);
+		}
+
 		// set layout and insert components
 		frame.setLayout(new BorderLayout());
 		frame.add(objectComboBox, BorderLayout.PAGE_START);
