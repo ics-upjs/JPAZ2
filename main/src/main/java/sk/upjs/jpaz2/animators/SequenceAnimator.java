@@ -86,18 +86,18 @@ public class SequenceAnimator implements WeightedAnimator {
 	}
 
 	/**
-	 * Constructs the sequence animator from array of weighted animators.
+	 * Constructs the sequence animator from sequence of weighted animators.
 	 * 
 	 * @param animators
-	 *            the array of weighted animators.
+	 *            the sequence of weighted animators.
 	 */
-	public SequenceAnimator(WeightedAnimator[] animators) {
+	public SequenceAnimator(WeightedAnimator... animators) {
 		if (animators == null) {
 			throw new NullPointerException("The array of animators cannot be null.");
 		}
 
 		if (animators.length == 0) {
-			throw new IllegalArgumentException("Sequence animator must be consist of at least one animator.");
+			throw new IllegalArgumentException("Sequence animator must consist of at least one animator.");
 		}
 
 		this.animators = new Animator[animators.length];
