@@ -76,11 +76,6 @@ public class WinPane extends Pane {
 	 */
 	private long creationTime;
 
-	/**
-	 * Indicates whether turtles should be centered when added to the pane.
-	 */
-	private boolean centeredTurtles = true;
-
 	// ---------------------------------------------------------------------------------------------------
 	// Constructors
 	// ---------------------------------------------------------------------------------------------------
@@ -201,45 +196,8 @@ public class WinPane extends Pane {
 	}
 
 	// ---------------------------------------------------------------------------------------------------
-	// Overridden methods
-	// ---------------------------------------------------------------------------------------------------
-
-	@Override
-	public void add(PaneObject o) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			super.add(o);
-			if (centeredTurtles && (o instanceof Turtle)) {
-				((Turtle) o).center();
-			}
-		}
-	}
-
-	// ---------------------------------------------------------------------------------------------------
 	// Getters and setters
 	// ---------------------------------------------------------------------------------------------------
-
-	/**
-	 * Returns whether turtles are centered when added to this pane.
-	 * 
-	 * @return true, if the turtles are centered, false otherwise.
-	 */
-	public boolean isCenteredTurtles() {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			return centeredTurtles;
-		}
-	}
-
-	/**
-	 * Sets whether turtles are centered when added to this pane.
-	 * 
-	 * @param centeredTurtles
-	 *            true, to enabled centering, false to disable.
-	 */
-	public void setCenteredTurtles(boolean centeredTurtles) {
-		synchronized (JPAZUtilities.getJPAZLock()) {
-			this.centeredTurtles = centeredTurtles;
-		}
-	}
 
 	/**
 	 * Gets the title of containing frame.

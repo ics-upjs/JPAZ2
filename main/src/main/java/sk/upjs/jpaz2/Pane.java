@@ -208,6 +208,11 @@ public class Pane implements PaneObject {
 	private final KeyEventManager keyEventManager;
 
 	/**
+	 * Indicates whether turtles should be centered when added to the pane.
+	 */
+	private boolean turtleCentering = true;
+	
+	/**
 	 * Simple name of the class.
 	 */
 	private final String className;
@@ -1066,7 +1071,7 @@ public class Pane implements PaneObject {
 	// ---------------------------------------------------------------------------------------------------
 	// Management of child objects
 	// ---------------------------------------------------------------------------------------------------
-
+	
 	/**
 	 * Gets the current parent pane of this pane. If this pane don't have a
 	 * parent, null is returned.
@@ -1144,8 +1149,36 @@ public class Pane implements PaneObject {
 					throw e;
 				}
 
+				// center turtles (if feature enabled)
+				if (isTurtleCentering() && (o instanceof Turtle)) {
+					((Turtle) o).center();
+				}
+				
 				invalidate();
 			}
+		}
+	}
+	
+	/**
+	 * Returns whether turtles are centered when added to this pane.
+	 * 
+	 * @return true, if the turtles are centered, false otherwise.
+	 */
+	public boolean isTurtleCentering() {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			return turtleCentering;
+		}
+	}
+
+	/**
+	 * Sets whether turtles are centered when added to this pane.
+	 * 
+	 * @param turtleCentering
+	 *            true, to enabled centering, false to disable.
+	 */
+	public void setTurtleCentering(boolean turtleCentering) {
+		synchronized (JPAZUtilities.getJPAZLock()) {
+			this.turtleCentering = turtleCentering;
 		}
 	}
 
@@ -1356,7 +1389,7 @@ public class Pane implements PaneObject {
 	 * 
 	 * @return the number of turtles in this pane.
 	 */
-	public int getTurtlesCount() {
+	public int getTurtleCount() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			return turtles.size();
 		}
@@ -1391,7 +1424,7 @@ public class Pane implements PaneObject {
 	 * 
 	 * @return the number of panes in this pane.
 	 */
-	public int getPanesCount() {
+	public int getPaneCount() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			return panes.size();
 		}
@@ -1426,7 +1459,7 @@ public class Pane implements PaneObject {
 	 * 
 	 * @return the number of pane objects in this panes.
 	 */
-	public int getPaneObjectsCount() {
+	public int getObjectCount() {
 		synchronized (JPAZUtilities.getJPAZLock()) {
 			return children.size();
 		}
