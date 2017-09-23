@@ -354,6 +354,10 @@ public abstract class Stage {
 	 * 
 	 * @param name
 	 *            the name of the scene.
+	 * @param sceneClass
+	 *            the class of the scene.
+	 * @param <T>
+	 *            the class of the scene extending the class {@link Scene}.
 	 * @return the scene with given name.
 	 */
 	@SuppressWarnings("unchecked")
