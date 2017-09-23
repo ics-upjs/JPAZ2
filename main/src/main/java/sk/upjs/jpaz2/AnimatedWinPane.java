@@ -10,7 +10,7 @@ public class AnimatedWinPane extends WinPane {
 	 * Animation speeds.
 	 */
 	public enum AnimationSpeed {
-		NONE(0.0), SLOW(10.0), NORMAL(5.0), FAST(2.5);
+		NONE(0.0), SLOW(10.0), NORMAL(5.0), FAST(2.5), SUPER_FAST(1);
 
 		/**
 		 * Move-turn speed of turtles.
@@ -32,6 +32,74 @@ public class AnimatedWinPane extends WinPane {
 	 * Animation speed of move-turn actions of turtles in the pane.
 	 */
 	private AnimationSpeed animationSpeed = AnimationSpeed.NORMAL;
+
+	/**
+	 * Constructs a new animated pane inside a window with predefined size
+	 */
+	public AnimatedWinPane() {
+		super();
+	}
+
+	/**
+	 * Constructs a new animated pane inside a window at a given position and with a
+	 * given title.
+	 * 
+	 * @param x
+	 *            the x-coordinate of the window top-left corner
+	 * @param y
+	 *            the y-coordinate of the window top-left corner
+	 * @param width
+	 *            the width of the pane
+	 * @param height
+	 *            the height of the pane
+	 * @param title
+	 *            the title displayed in the frame's border
+	 */
+	public AnimatedWinPane(int x, int y, int width, int height, String title) {
+		super(x, y, width, height, title);
+	}
+
+	/**
+	 * Constructs a new animated pane inside a window at a given position.
+	 * 
+	 * @param x
+	 *            the x-coordinate of the window top-left corner
+	 * @param y
+	 *            the y-coordinate of the window top-left corner
+	 * @param width
+	 *            the width of the pane
+	 * @param height
+	 *            the height of the pane
+	 */
+	public AnimatedWinPane(int x, int y, int width, int height) {
+		super(x, y, width, height);
+	}
+
+	/**
+	 * Constructs a new animated pane inside a window with a given title.
+	 * 
+	 * @param width
+	 *            the width of the pane
+	 * @param height
+	 *            the height of the pane
+	 * @param title
+	 *            the title displayed in the frame's border
+	 */
+	public AnimatedWinPane(int width, int height, String title) {
+		super(width, height, title);
+	}
+
+	/**
+	 * Constructs a new animated pane inside a window.
+	 * 
+	 * @param width
+	 *            the width of the pane
+	 * @param height
+	 *            the height of the pane
+	 */
+	public AnimatedWinPane(int width, int height) {
+		super(width, height);
+	}
 
 	@Override
 	public void add(PaneObject o) {
